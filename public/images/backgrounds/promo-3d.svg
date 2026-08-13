@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500" fill="none">
+  <defs>
+    <linearGradient id="pbg" x1="0" y1="0" x2="800" y2="500">
+      <stop offset="0%" stop-color="#16140f"/>
+      <stop offset="100%" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f0e0a0"/>
+      <stop offset="45%" stop-color="#c9a227"/>
+      <stop offset="100%" stop-color="#8a6b14"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#pbg)"/>
+  <circle cx="620" cy="180" r="140" fill="#c9a227" opacity=".1"/>
+  <g transform="translate(480 140)">
+    <path d="M0 50 L90 0 L180 50 L90 100 Z" fill="url(#pg)"/>
+    <path d="M0 50 L90 100 L90 200 L0 150 Z" fill="#6f5610"/>
+    <path d="M90 100 L180 50 L180 150 L90 200 Z" fill="#a67c1a"/>
+  </g>
+  <g opacity=".2" stroke="#e8d48b" fill="none">
+    <path d="M40 420 L220 360 L400 420 L220 480 Z"/>
+    <path d="M40 360 L220 300 L400 360"/>
+  </g>
+  <path d="M0 0 L800 0 L800 500 L0 500 Z" fill="url(#pbg)" opacity=".1"/>
+</svg>

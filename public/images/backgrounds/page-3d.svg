@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1200" viewBox="0 0 1600 1200" fill="none">
+  <defs>
+    <linearGradient id="pageBg" x1="0" y1="0" x2="1600" y2="1200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fbfaf7"/>
+      <stop offset="50%" stop-color="#f7f5f0"/>
+      <stop offset="100%" stop-color="#f3f0e8"/>
+    </linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8d48b"/>
+      <stop offset="50%" stop-color="#c9a227"/>
+      <stop offset="100%" stop-color="#a67c1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#pageBg)"/>
+
+  <!-- soft gold wash -->
+  <circle cx="1400" cy="80" r="280" fill="#c9a227" opacity=".045"/>
+  <circle cx="100" cy="1000" r="320" fill="#e8d48b" opacity=".05"/>
+
+  <!-- faint isometric cubes top-right -->
+  <g opacity=".07" transform="translate(1180 80)">
+    <path d="M0 30 L50 0 L100 30 L50 60 Z" fill="url(#g)"/>
+    <path d="M0 30 L50 60 L50 120 L0 90 Z" fill="#a67c1a"/>
+    <path d="M50 60 L100 30 L100 90 L50 120 Z" fill="#c9a227"/>
+  </g>
+  <g opacity=".05" transform="translate(1320 180) scale(.7)">
+    <path d="M0 30 L50 0 L100 30 L50 60 Z" fill="url(#g)"/>
+    <path d="M0 30 L50 60 L50 120 L0 90 Z" fill="#a67c1a"/>
+    <path d="M50 60 L100 30 L100 90 L50 120 Z" fill="#c9a227"/>
+  </g>
+
+  <!-- wireframe grid bottom -->
+  <g opacity=".04" stroke="#a67c1a" stroke-width="1">
+    <path d="M0 900 L800 700 L1600 900"/>
+    <path d="M0 980 L800 780 L1600 980"/>
+    <path d="M0 1060 L800 860 L1600 1060"/>
+    <path d="M200 1200 L800 950 L1400 1200"/>
+    <path d="M400 700 L400 1100"/>
+    <path d="M800 650 L800 1100"/>
+    <path d="M1200 700 L1200 1100"/>
+  </g>
+
+  <!-- tiny filament dots -->
+  <g fill="#c9a227" opacity=".08">
+    <circle cx="220" cy="180" r="3"/>
+    <circle cx="260" cy="210" r="2"/>
+    <circle cx="300" cy="160" r="2.5"/>
+    <circle cx="980" cy="420" r="2"/>
+    <circle cx="1020" cy="450" r="3"/>
+    <circle cx="1500" cy="900" r="2.5"/>
+  </g>
+</svg>

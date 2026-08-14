@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,7 +18,7 @@ class CategoryResource extends JsonResource
             'sku_prefix' => $this->sku_prefix,
             'description' => $this->description,
             'image' => $this->image,
-            'image_url' => $this->image ? asset('storage/'.$this->image) : null,
+            'image_url' => MediaUrl::fromStorage($this->image),
             'meta_title' => $this->meta_title,
             'meta_description' => $this->meta_description,
             'meta_keywords' => $this->meta_keywords,

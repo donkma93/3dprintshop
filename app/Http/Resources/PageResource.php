@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +20,7 @@ class PageResource extends JsonResource
             'meta_description' => $this->meta_description,
             'meta_keywords' => $this->meta_keywords,
             'og_image' => $this->og_image,
-            'og_image_url' => $this->og_image ? asset('storage/'.$this->og_image) : null,
+            'og_image_url' => MediaUrl::fromStorage($this->og_image),
             'is_published' => (bool) $this->is_published,
             'show_in_menu' => (bool) $this->show_in_menu,
             'sort_order' => (int) $this->sort_order,

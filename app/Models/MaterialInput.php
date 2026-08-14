@@ -31,6 +31,7 @@ class MaterialInput extends Model
 
     public function material(): BelongsTo
     {
-        return $this->belongsTo(Material::class);
+        // Giữ liên kết khi nguyên liệu đã soft-delete (hiển thị / điều chỉnh tồn / thùng rác)
+        return $this->belongsTo(Material::class)->withTrashed();
     }
 }

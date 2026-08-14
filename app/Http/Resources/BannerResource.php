@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,7 +16,7 @@ class BannerResource extends JsonResource
             'title' => $this->title,
             'subtitle' => $this->subtitle,
             'image' => $this->image,
-            'image_url' => $this->image ? asset('storage/'.$this->image) : null,
+            'image_url' => MediaUrl::fromStorage($this->image),
             'link' => $this->link,
             'button_text' => $this->button_text,
             'position' => $this->position,

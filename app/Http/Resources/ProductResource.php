@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,7 +22,7 @@ class ProductResource extends JsonResource
             'sku' => $this->sku,
             'qr_token' => $this->qr_token,
             'qr_payload' => $this->qr_token ? \App\Support\ProductQrCode::payload($this->resource) : null,
-            'qr_image_url' => $this->qr_image ? asset('storage/'.$this->qr_image) : null,
+            'qr_image_url' => MediaUrl::fromStorage($this->qr_image),
             'short_description' => $this->short_description,
             'description' => $this->description,
             'price' => (float) $this->price,
@@ -37,7 +38,7 @@ class ProductResource extends JsonResource
             'cost_price' => $this->when($canRevenue, (float) $this->cost_price),
             'stock' => (int) $this->stock,
             'image' => $this->image,
-            'image_url' => $this->image ? asset('storage/'.$this->image) : null,
+            'image_url' => MediaUrl::fromStorage($this->image),
             // Public product page (for chat product share cards / mentions).
             'url' => $this->slug ? route('shop.products.show', $this->slug) : null,
             'material_used' => $this->material_used,
@@ -48,7 +49,7 @@ class ProductResource extends JsonResource
             'meta_description' => $this->meta_description,
             'meta_keywords' => $this->meta_keywords,
             'og_image' => $this->og_image,
-            'og_image_url' => $this->og_image ? asset('storage/'.$this->og_image) : null,
+            'og_image_url' => MediaUrl::fromStorage($this->og_image),
             'sort_order' => (int) $this->sort_order,
             'created_at' => optional($this->created_at)->toIso8601String(),
             'updated_at' => optional($this->updated_at)->toIso8601String(),

@@ -27,7 +27,7 @@ class MaterialInputController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'material_id' => ['required', 'exists:materials,id'],
+            'material_id' => ['required', 'exists:materials,id,deleted_at,NULL'],
             'input_date' => ['required', 'date'],
             'quantity' => ['required', 'numeric', 'min:0.01'],
             'unit_price' => ['required', 'numeric', 'min:0'],
@@ -41,7 +41,7 @@ class MaterialInputController extends Controller
         DB::transaction(function () use ($data) {
             MaterialInput::create($data);
 
-            $material = Material::lockForUpdate()->findOrFail($data['material_id']);
+            $material = Material::query()->lockForUpdate()->findOrFail($data['material_id']);
             $material->stock_quantity = (float) $material->stock_quantity + (float) $data['quantity'];
             $material->unit_price = $data['unit_price'];
             $material->save();
@@ -60,7 +60,7 @@ class MaterialInputController extends Controller
     public function update(Request $request, MaterialInput $materialInput)
     {
         $data = $request->validate([
-            'material_id' => ['required', 'exists:materials,id'],
+            'material_id' => ['required', 'exists:materials,id,deleted_at,NULL'],
             'input_date' => ['required', 'date'],
             'quantity' => ['required', 'numeric', 'min:0.01'],
             'unit_price' => ['required', 'numeric', 'min:0'],
@@ -72,13 +72,12 @@ class MaterialInputController extends Controller
         $data['total_price'] = round((float) $data['quantity'] * (float) $data['unit_price'], 2);
 
         DB::transaction(function () use ($materialInput, $data) {
-            $oldMaterial = Material::lockForUpdate()->findOrFail($materialInput->material_id);
-            $oldMaterial->stock_quantity = max(0, (float) $oldMaterial->stock_quantity - (float) $materialInput->quantity);
-            $oldMaterial->save();
+            // NL cũ có thể soft-delete / mất hẳn — chỉ trừ tồn nếu còn.
+            $this->adjustStock($materialInput->material_id, -(float) $materialInput->quantity);
 
             $materialInput->update($data);
 
-            $newMaterial = Material::lockForUpdate()->findOrFail($data['material_id']);
+            $newMaterial = Material::query()->lockForUpdate()->findOrFail($data['material_id']);
             $newMaterial->stock_quantity = (float) $newMaterial->stock_quantity + (float) $data['quantity'];
             $newMaterial->unit_price = $data['unit_price'];
             $newMaterial->save();
@@ -90,13 +89,26 @@ class MaterialInputController extends Controller
     public function destroy(MaterialInput $materialInput)
     {
         DB::transaction(function () use ($materialInput) {
-            // Trừ tồn khi đưa vào thùng rác; khôi phục sẽ cộng lại
-            $material = Material::lockForUpdate()->findOrFail($materialInput->material_id);
-            $material->stock_quantity = max(0, (float) $material->stock_quantity - (float) $materialInput->quantity);
-            $material->save();
+            // Trừ tồn nếu NL còn (kể cả soft-delete). NL đã xóa vĩnh viễn → vẫn xóa phiếu.
+            $this->adjustStock($materialInput->material_id, -(float) $materialInput->quantity);
             $materialInput->delete();
         });
 
         return redirect()->route('admin.material-inputs.index')->with('success', 'Đã chuyển phiếu nhập vào thùng rác và điều chỉnh tồn kho. Sẽ xóa vĩnh viễn sau 30 ngày.');
+    }
+
+    /**
+     * Cộng/trừ tồn nguyên liệu (kể cả soft-deleted). Không ném lỗi nếu NL không còn.
+     */
+    private function adjustStock(int $materialId, float $delta): void
+    {
+        $material = Material::withTrashed()->lockForUpdate()->find($materialId);
+        if (! $material) {
+            return;
+        }
+
+        $next = (float) $material->stock_quantity + $delta;
+        $material->stock_quantity = max(0, $next);
+        $material->save();
     }
 }

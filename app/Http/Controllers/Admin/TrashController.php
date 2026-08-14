@@ -114,6 +114,8 @@ class TrashController extends Controller
         DB::transaction(function () use ($type, $model) {
             if ($type === 'material_inputs') {
                 /** @var MaterialInput $model */
+                // withTrashed không cần ở đây vì đã chặn restore khi NL còn trong thùng rác;
+                // vẫn lock an toàn theo id active.
                 $material = Material::lockForUpdate()->findOrFail($model->material_id);
                 $material->stock_quantity = (float) $material->stock_quantity + (float) $model->quantity;
                 $material->save();

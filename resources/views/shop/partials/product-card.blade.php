@@ -30,9 +30,9 @@
                 <em>{{ number_format($product->final_price, 0, ',', '.') }}</em> đ
             @endif
         </div>
-        <div class="d-flex flex-column align-items-end gap-1">
+        <div class="product-card__actions d-flex flex-column align-items-stretch align-items-sm-end gap-1">
             <button type="button"
-                    class="product-card__link product-card__chat-btn border-0 bg-transparent p-0"
+                    class="product-card__link product-card__chat-btn border-0 bg-transparent p-0 text-start text-sm-end"
                     data-chat-product
                     data-product-id="{{ $product->id }}"
                     data-product-name="{{ $product->name }}"
@@ -40,9 +40,9 @@
                     data-product-price="{{ number_format($product->final_price, 0, ',', '.') }} đ"
                     data-product-image="{{ $product->image_url }}"
                     data-product-url="{{ route('shop.products.show', $product->slug) }}">
-                Chat tư vấn
+                Chat
             </button>
-            <a href="{{ route('shop.products.show', $product->slug) }}#order-form" class="product-card__link">Đặt hàng</a>
+            <a href="{{ route('shop.products.show', $product->slug) }}#order-form" class="product-card__link text-start text-sm-end">Đặt hàng</a>
         </div>
     </div>
 </article>

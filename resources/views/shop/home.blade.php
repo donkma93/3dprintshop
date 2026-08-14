@@ -435,15 +435,11 @@
     @endif
 </div>
 
-{{-- Nút nổi: luôn có đường vào sản phẩm --}}
+{{-- Nút nổi: đặt hàng nhanh + lên đầu trang --}}
 <div class="float-engage" id="floatEngage">
     <a href="#order-form" class="float-engage__btn">
         <i class="bi bi-bag-plus"></i>
         <span>Đặt hàng</span>
-    </a>
-    <a href="{{ route('shop.products.index') }}" class="float-engage__btn" style="background:#0f172a">
-        <i class="bi bi-grid-3x3-gap"></i>
-        <span>Sản phẩm</span>
     </a>
     <button type="button" class="float-engage__top" id="backToTop" aria-label="Lên đầu trang" hidden>
         <i class="bi bi-arrow-up"></i>

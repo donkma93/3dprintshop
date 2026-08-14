@@ -7,6 +7,8 @@ use App\Http\Resources\ChatConversationResource;
 use App\Http\Resources\ChatMessageResource;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Support\ChatIdleCloser;
+use App\Support\ChatProductShare;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +17,7 @@ use Illuminate\Support\Str;
 
 class ChatController extends ApiController
 {
-    private const TYPING_TTL_SECONDS = 4;
+    private const TYPING_TTL_SECONDS = 6;
 
     public function show(Request $request): JsonResponse
     {
@@ -37,11 +39,14 @@ class ChatController extends ApiController
             ]);
         }
 
+        ChatIdleCloser::closeIfIdle($conversation);
+        $conversation->refresh();
+
         $afterId = (int) $request->query('after_id', 0);
         $markRead = $request->boolean('mark_read', $afterId === 0);
 
         $messages = $conversation->messages()
-            ->with('admin:id,name')
+            ->with(['admin:id,name', 'product'])
             ->when($afterId > 0, fn ($q) => $q->where('id', '>', $afterId))
             ->orderBy('id')
             ->get();
@@ -81,11 +86,16 @@ class ChatController extends ApiController
             'guest_phone' => ['nullable', 'string', 'max:40'],
             'guest_email' => ['nullable', 'email', 'max:150'],
             'message' => ['nullable', 'string', 'max:2000'],
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
         if (empty($data['guest_phone']) && empty($data['guest_email'])) {
             return $this->fail('Vui lòng để lại số điện thoại hoặc email để chúng tôi liên hệ lại.', 422);
         }
+
+        [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
+            isset($data['product_id']) ? (int) $data['product_id'] : null
+        );
 
         $conversation = ChatConversation::create([
             'guest_token' => ChatConversation::newGuestToken(),
@@ -110,18 +120,24 @@ class ChatController extends ApiController
             'body' => $welcome,
         ]);
 
+        $guestBody = trim((string) ($data['message'] ?? ''));
+        if ($guestBody === '') {
+            $guestBody = $productSnapshot['message_template']
+                ?? 'Khách vừa bắt đầu chat và để lại thông tin liên hệ.';
+        }
+
         ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'guest',
-            'body' => ! empty($data['message'])
-                ? $data['message']
-                : 'Khách vừa bắt đầu chat và để lại thông tin liên hệ.',
+            'body' => $guestBody,
+            'product_id' => $productId,
+            'product_snapshot' => $productSnapshot,
         ]);
 
         $conversation->last_message_at = now();
         $conversation->save();
 
-        $messages = $conversation->messages()->orderBy('id')->get();
+        $messages = $conversation->messages()->with(['admin:id,name', 'product'])->orderBy('id')->get();
 
         return $this->created([
             'token' => $conversation->guest_token,
@@ -140,24 +156,44 @@ class ChatController extends ApiController
 
         $data = $request->validate([
             'token' => ['required', 'string', 'max:64'],
-            'message' => ['required', 'string', 'max:2000'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
         $conversation = ChatConversation::where('guest_token', $data['token'])->first();
         if (! $conversation) {
             return $this->fail('Không tìm thấy cuộc trò chuyện.', 404, ['can_restart' => true]);
         }
+
+        if (ChatIdleCloser::closeIfIdle($conversation)) {
+            $conversation->refresh();
+        }
+
         if ($conversation->status === 'closed') {
-            return $this->fail('Hội thoại đã đóng. Vui lòng mở hội thoại mới để tiếp tục.', 422, [
+            return $this->fail(ChatIdleCloser::CLOSE_MESSAGE, 422, [
                 'can_restart' => true,
                 'conversation' => (new ChatConversationResource($conversation))->resolve(),
             ]);
         }
 
+        [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
+            isset($data['product_id']) ? (int) $data['product_id'] : null
+        );
+
+        $body = trim((string) ($data['message'] ?? ''));
+        if ($body === '' && $productSnapshot) {
+            $body = (string) ($productSnapshot['message_template'] ?? '');
+        }
+        if ($body === '') {
+            return $this->fail('Vui lòng nhập tin nhắn hoặc chọn sản phẩm.', 422);
+        }
+
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'guest',
-            'body' => trim($data['message']),
+            'body' => $body,
+            'product_id' => $productId,
+            'product_snapshot' => $productSnapshot,
         ]);
 
         $this->setTyping($conversation->id, 'guest', false);
@@ -168,7 +204,7 @@ class ChatController extends ApiController
 
         $guestCount = $conversation->messages()->where('sender', 'guest')->count();
         if ($guestCount <= 2) {
-            $bot = $this->autoReply(trim($data['message']));
+            $bot = $this->autoReply($body);
             if ($bot) {
                 ChatMessage::create([
                     'conversation_id' => $conversation->id,
@@ -181,7 +217,7 @@ class ChatController extends ApiController
         }
 
         $messages = $conversation->messages()
-            ->with('admin:id,name')
+            ->with(['admin:id,name', 'product'])
             ->where('id', '>=', $message->id)
             ->orderBy('id')
             ->get();
@@ -217,8 +253,16 @@ class ChatController extends ApiController
         ]);
 
         $conversation = ChatConversation::where('guest_token', $data['token'])->first();
-        if (! $conversation || $conversation->status === 'closed') {
+        if (! $conversation) {
             return $this->fail('Không tìm thấy hội thoại.', 404);
+        }
+
+        if (ChatIdleCloser::closeIfIdle($conversation)) {
+            $conversation->refresh();
+        }
+
+        if ($conversation->status === 'closed') {
+            return $this->fail(ChatIdleCloser::CLOSE_MESSAGE, 422, ['closed' => true]);
         }
 
         $this->setTyping($conversation->id, 'guest', (bool) $data['typing']);

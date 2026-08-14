@@ -62,6 +62,15 @@ class AdminApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      // Keep admin UI readable on high system font scales (S22 Ultra accessibility).
+      builder: (context, child) {
+        final mq = MediaQuery.of(context);
+        final scale = mq.textScaler.scale(1.0).clamp(0.9, 1.2);
+        return MediaQuery(
+          data: mq.copyWith(textScaler: TextScaler.linear(scale)),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       routerConfig: router,
     );
   }

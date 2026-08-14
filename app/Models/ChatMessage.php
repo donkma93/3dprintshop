@@ -11,12 +11,15 @@ class ChatMessage extends Model
         'conversation_id',
         'sender',
         'admin_user_id',
+        'product_id',
         'body',
+        'product_snapshot',
         'is_read',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
+        'product_snapshot' => 'array',
     ];
 
     public function conversation(): BelongsTo
@@ -27,5 +30,10 @@ class ChatMessage extends Model
     public function admin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'admin_user_id');
+    }
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
     }
 }

@@ -1644,6 +1644,186 @@
             0%, 80%, 100% { opacity: .35; transform: translateY(0); }
             40% { opacity: 1; transform: translateY(-2px); }
         }
+        .chat-mention {
+            margin: 0 .65rem .35rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, .12);
+            max-height: 220px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-mention[hidden] { display: none !important; }
+        .chat-mention__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .45rem .7rem;
+            font-size: .75rem;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 1px solid #f1f5f9;
+            background: #f8fafc;
+        }
+        .chat-mention__close {
+            border: 0;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 .15rem;
+        }
+        .chat-mention__list {
+            overflow-y: auto;
+            max-height: 180px;
+        }
+        .chat-mention__item {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            width: 100%;
+            border: 0;
+            background: #fff;
+            text-align: left;
+            padding: .5rem .7rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .chat-mention__item:hover,
+        .chat-mention__item.is-active {
+            background: #eff6ff;
+        }
+        .chat-mention__thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #e2e8f0;
+            flex-shrink: 0;
+        }
+        .chat-mention__thumb--empty {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: .85rem;
+        }
+        .chat-mention__meta { min-width: 0; flex: 1; }
+        .chat-mention__name {
+            font-size: .82rem;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-mention__sub {
+            font-size: .72rem;
+            color: #64748b;
+        }
+        .chat-mention__empty {
+            padding: .7rem;
+            text-align: center;
+            font-size: .78rem;
+            color: #94a3b8;
+        }
+        .chat-bubble__body a.chat-product-link {
+            color: #2563eb;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+        .chat-product-card {
+            display: block;
+            margin-top: .45rem;
+            border: 1px solid rgba(15, 23, 42, .1);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            text-decoration: none !important;
+            color: inherit !important;
+            max-width: 240px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .chat-product-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .1);
+        }
+        .chat-bubble--guest .chat-product-card {
+            border-color: rgba(201, 162, 39, .35);
+            background: #fffef8;
+        }
+        .chat-bubble--admin .chat-product-card {
+            border-color: rgba(255,255,255,.25);
+            background: rgba(255,255,255,.12);
+            color: #fff !important;
+        }
+        .chat-product-card__img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+            background: #e2e8f0;
+        }
+        .chat-product-card__img--empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 1.6rem;
+        }
+        .chat-product-card__body {
+            padding: .55rem .7rem .65rem;
+        }
+        .chat-product-card__name {
+            font-weight: 700;
+            font-size: .82rem;
+            line-height: 1.3;
+            margin-bottom: .2rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .chat-product-card__price {
+            font-size: .78rem;
+            font-weight: 700;
+            color: #b45309;
+        }
+        .chat-bubble--admin .chat-product-card__price { color: #fde68a; }
+        .chat-product-card__link {
+            font-size: .72rem;
+            color: #2563eb;
+            margin-top: .25rem;
+            word-break: break-all;
+        }
+        .chat-bubble--admin .chat-product-card__link { color: #bfdbfe; }
+        .chat-pending-product {
+            display: none;
+            align-items: center;
+            gap: .55rem;
+            margin: 0 .75rem .35rem;
+            padding: .45rem .55rem;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            background: #fffbeb;
+            font-size: .78rem;
+        }
+        .chat-pending-product.is-on { display: flex; }
+        .chat-pending-product img {
+            width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #e2e8f0;
+        }
+        .chat-pending-product__meta { min-width: 0; flex: 1; }
+        .chat-pending-product__name {
+            font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .chat-pending-product__sub { color: #92400e; font-size: .72rem; }
+        .chat-pending-product__clear {
+            border: 0; background: transparent; color: #92400e; font-size: 1.1rem; line-height: 1; padding: .15rem;
+        }
         @media (max-width: 575.98px) {
             .contact-fab__item span { display: none; }
             .contact-fab__item { width: 46px; height: 46px; padding: 0; justify-content: center; border-radius: 50%; }
@@ -2906,11 +3086,21 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
     var staffToastTitle = document.getElementById('chatStaffToastTitle');
     var staffToastText = document.getElementById('chatStaffToastText');
     var staffToastOpen = document.getElementById('chatStaffToastOpen');
+    var mentionBox = document.getElementById('chatMentionBox');
+    var mentionList = document.getElementById('chatMentionList');
+    var mentionEmpty = document.getElementById('chatMentionEmpty');
+    var mentionClose = document.getElementById('chatMentionClose');
+    var pendingBox = document.getElementById('chatPendingProduct');
+    var pendingThumb = document.getElementById('chatPendingThumb');
+    var pendingName = document.getElementById('chatPendingName');
+    var pendingSub = document.getElementById('chatPendingSub');
+    var pendingClear = document.getElementById('chatPendingClear');
     if (!fab || !toggle || !widget) return;
 
     var TOKEN_KEY = 'shop_chat_token';
     var PROFILE_KEY = 'shop_chat_profile';
     var LAST_ALERT_KEY = 'shop_chat_last_alert_id';
+    var PENDING_PRODUCT_KEY = 'shop_chat_pending_product';
     var token = localStorage.getItem(TOKEN_KEY) || '';
     var lastId = 0;
     var lastAlertedId = Number(localStorage.getItem(LAST_ALERT_KEY) || 0) || 0;
@@ -2921,12 +3111,18 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
     var typingIdleTimer = null;
     var toastTimer = null;
     var audioCtx = null;
+    var mentionTimer = null;
+    var mentionItems = [];
+    var mentionActive = -1;
+    var mentionQuery = null;
+    var pendingProduct = null;
     var csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     var urls = {
         show: @json(route('shop.chat.show')),
         start: @json(route('shop.chat.start')),
         send: @json(route('shop.chat.send')),
-        typing: @json(route('shop.chat.typing'))
+        typing: @json(route('shop.chat.typing')),
+        products: @json(route('shop.chat.products'))
     };
 
     function ensureAudio() {
@@ -3184,12 +3380,212 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
                     localTyping = false; // force send
                     notifyTyping(true);
                 }
-            }, 2000);
+            }, 1800);
         }
         clearTimeout(typingIdleTimer);
         typingIdleTimer = setTimeout(function () {
             notifyTyping(false);
-        }, 1800);
+        }, 2500);
+    }
+
+    function getMentionMatch(value, caret) {
+        if (caret == null) caret = (value || '').length;
+        var before = String(value || '').slice(0, caret);
+        var m = before.match(/(^|[\s\n])@([^\s@]{0,40})$/);
+        if (!m) return null;
+        return {
+            start: caret - m[2].length - 1,
+            end: caret,
+            query: m[2]
+        };
+    }
+
+    function hideMention() {
+        mentionQuery = null;
+        mentionItems = [];
+        mentionActive = -1;
+        if (mentionBox) mentionBox.setAttribute('hidden', 'hidden');
+        if (mentionList) mentionList.innerHTML = '';
+        if (mentionEmpty) mentionEmpty.setAttribute('hidden', 'hidden');
+    }
+
+    function renderMentionList(items) {
+        mentionItems = items || [];
+        mentionActive = mentionItems.length ? 0 : -1;
+        if (!mentionList) return;
+        mentionList.innerHTML = '';
+        if (!mentionItems.length) {
+            if (mentionEmpty) mentionEmpty.removeAttribute('hidden');
+            return;
+        }
+        if (mentionEmpty) mentionEmpty.setAttribute('hidden', 'hidden');
+        mentionItems.forEach(function (p, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chat-mention__item' + (idx === 0 ? ' is-active' : '');
+            btn.setAttribute('role', 'option');
+            var thumb = p.image_url
+                ? '<img class="chat-mention__thumb" src="' + esc(p.image_url) + '" alt="">'
+                : '<span class="chat-mention__thumb chat-mention__thumb--empty"><i class="bi bi-box-seam"></i></span>';
+            btn.innerHTML =
+                thumb +
+                '<span class="chat-mention__meta">' +
+                    '<div class="chat-mention__name">' + esc(p.name) + '</div>' +
+                    '<div class="chat-mention__sub">' +
+                        esc(p.price_formatted || '') +
+                        (p.sku ? (' · ' + esc(p.sku)) : '') +
+                    '</div>' +
+                '</span>';
+            btn.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                pickMention(p);
+            });
+            mentionList.appendChild(btn);
+        });
+    }
+
+    function setMentionActive(idx) {
+        if (!mentionItems.length) return;
+        mentionActive = (idx + mentionItems.length) % mentionItems.length;
+        var nodes = mentionList ? mentionList.querySelectorAll('.chat-mention__item') : [];
+        nodes.forEach(function (n, i) {
+            n.classList.toggle('is-active', i === mentionActive);
+        });
+        if (nodes[mentionActive]) {
+            nodes[mentionActive].scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    function fetchMentionProducts(q) {
+        var url = urls.products + '?q=' + encodeURIComponent(q || '');
+        fetch(url, {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (!mentionQuery) return;
+            var items = (data && data.data) ? data.data : [];
+            if (mentionBox) mentionBox.removeAttribute('hidden');
+            renderMentionList(items);
+        }).catch(function () {
+            if (mentionBox) mentionBox.removeAttribute('hidden');
+            renderMentionList([]);
+        });
+    }
+
+    function updateMentionFromInput() {
+        if (!chatInput || conversationStatus === 'closed') {
+            hideMention();
+            return;
+        }
+        var match = getMentionMatch(chatInput.value, chatInput.selectionStart);
+        if (!match) {
+            hideMention();
+            return;
+        }
+        mentionQuery = match;
+        clearTimeout(mentionTimer);
+        mentionTimer = setTimeout(function () {
+            if (!mentionQuery) return;
+            fetchMentionProducts(mentionQuery.query);
+        }, 120);
+    }
+
+    function setPendingProduct(product, opts) {
+        opts = opts || {};
+        if (!product || !product.id) {
+            clearPendingProduct();
+            return;
+        }
+        pendingProduct = {
+            id: Number(product.id),
+            name: product.name || 'Sản phẩm',
+            sku: product.sku || null,
+            price_formatted: product.price_formatted || null,
+            image_url: product.image_url || null,
+            url: product.url || null,
+            message_template: product.message_template || null,
+            insert_text: product.insert_text || null
+        };
+        try { sessionStorage.setItem(PENDING_PRODUCT_KEY, JSON.stringify(pendingProduct)); } catch (e) {}
+        if (pendingBox) {
+            pendingBox.classList.add('is-on');
+            if (pendingName) pendingName.textContent = pendingProduct.name;
+            if (pendingSub) {
+                pendingSub.textContent = (pendingProduct.price_formatted || '') +
+                    (pendingProduct.sku ? (' · ' + pendingProduct.sku) : '') +
+                    ' · kèm ảnh + link khi gửi';
+            }
+            if (pendingThumb) {
+                pendingThumb.innerHTML = pendingProduct.image_url
+                    ? '<img src="' + esc(pendingProduct.image_url) + '" alt="">'
+                    : '<span class="chat-mention__thumb chat-mention__thumb--empty"><i class="bi bi-box-seam"></i></span>';
+            }
+        }
+        if (opts.fillInput && chatInput) {
+            var tpl = pendingProduct.message_template
+                || ('Tôi muốn hỏi / tư vấn về sản phẩm: ' + pendingProduct.name
+                    + (pendingProduct.sku ? (' (SKU: ' + pendingProduct.sku + ')') : '')
+                    + (pendingProduct.url ? (' — ' + pendingProduct.url) : ''));
+            if (!String(chatInput.value || '').trim()) {
+                chatInput.value = tpl;
+            }
+        }
+    }
+
+    function clearPendingProduct() {
+        pendingProduct = null;
+        try { sessionStorage.removeItem(PENDING_PRODUCT_KEY); } catch (e) {}
+        if (pendingBox) pendingBox.classList.remove('is-on');
+    }
+
+    function restorePendingProduct() {
+        try {
+            var raw = sessionStorage.getItem(PENDING_PRODUCT_KEY);
+            if (!raw) return;
+            var p = JSON.parse(raw);
+            if (p && p.id) setPendingProduct(p, { fillInput: false });
+        } catch (e) {}
+    }
+
+    function pickMention(product) {
+        if (!chatInput || !product) return;
+        var value = chatInput.value || '';
+        var start = mentionQuery ? mentionQuery.start : value.length;
+        var end = mentionQuery ? mentionQuery.end : value.length;
+        var insert = product.message_template || product.insert_text || ('@' + product.name);
+        // Keep a trailing space for continued typing.
+        if (!/\s$/.test(insert)) insert += ' ';
+        chatInput.value = value.slice(0, start) + insert + value.slice(end);
+        var caret = start + insert.length;
+        chatInput.focus();
+        try { chatInput.setSelectionRange(caret, caret); } catch (e) {}
+        setPendingProduct(product);
+        hideMention();
+        onLocalTypingActivity();
+    }
+
+    function linkifyProductUrls(text) {
+        var raw = text == null ? '' : String(text);
+        // Escape first, then turn http(s) product-like URLs into anchors.
+        var escaped = esc(raw);
+        return escaped.replace(
+            /(https?:\/\/[^\s<]+)/g,
+            '<a class="chat-product-link" href="$1" target="_blank" rel="noopener">$1<\/a>'
+        );
+    }
+
+    function productCardHtml(product) {
+        if (!product || !product.id) return '';
+        var href = product.url || '#';
+        var img = product.image_url
+            ? '<img class="chat-product-card__img" src="' + esc(product.image_url) + '" alt="' + esc(product.name || '') + '">'
+            : '<div class="chat-product-card__img chat-product-card__img--empty"><i class="bi bi-box-seam"></i></div>';
+        return '<a class="chat-product-card" href="' + esc(href) + '" target="_blank" rel="noopener">' +
+            img +
+            '<div class="chat-product-card__body">' +
+                '<div class="chat-product-card__name">' + esc(product.name || 'Sản phẩm') + '</div>' +
+                (product.price_formatted ? ('<div class="chat-product-card__price">' + esc(product.price_formatted) + '</div>') : '') +
+                (product.url ? ('<div class="chat-product-card__link">' + esc(product.url) + '</div>') : '') +
+            '</div></a>';
     }
 
     function esc(s) {
@@ -3219,7 +3615,12 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
         el.innerHTML =
             '<div class="chat-bubble__meta">' + esc(whoLabel(m)) + ' · ' + esc(m.created_at || '') + '</div>' +
             '<div class="chat-bubble__body"></div>';
-        el.querySelector('.chat-bubble__body').textContent = m.body || '';
+        var bodyEl = el.querySelector('.chat-bubble__body');
+        var bodyHtml = linkifyProductUrls(m.body || '');
+        if (m.product) {
+            bodyHtml += productCardHtml(m.product);
+        }
+        bodyEl.innerHTML = bodyHtml;
         log.appendChild(el);
         lastId = Math.max(lastId, Number(m.id) || 0);
         if (scroll !== false) log.scrollTop = log.scrollHeight;
@@ -3317,6 +3718,10 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
                     } else if (Number(data.unread_from_staff) > 0) {
                         setUnreadVisual(Number(data.unread_from_staff), null);
                     }
+                    // Still update typing when widget is closed so opening feels live.
+                    if (data.typing) {
+                        setPeerTyping(!!data.typing.admin);
+                    }
                     updateStaffStatus(data.staff || {
                         last_admin_name: data.conversation.last_admin_name
                     }, data.typing);
@@ -3381,6 +3786,12 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
             guest_email: (fd.get('guest_email') || '').toString().trim() || null,
             message: (fd.get('message') || '').toString().trim() || null
         };
+        if (pendingProduct && pendingProduct.id) {
+            payload.product_id = pendingProduct.id;
+            if (!payload.message && pendingProduct.message_template) {
+                payload.message = pendingProduct.message_template;
+            }
+        }
         startBtn.disabled = true;
         fetch(urls.start, {
             method: 'POST',
@@ -3409,6 +3820,7 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
                 guest_phone: payload.guest_phone,
                 guest_email: payload.guest_email
             });
+            clearPendingProduct();
             applyClosedState(false);
             showRoom();
             renderMessages(res.data.messages || [], true);
@@ -3421,9 +3833,46 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
         });
     });
 
-    chatInput?.addEventListener('input', onLocalTypingActivity);
+    chatInput?.addEventListener('input', function () {
+        onLocalTypingActivity();
+        updateMentionFromInput();
+    });
+    chatInput?.addEventListener('click', updateMentionFromInput);
+    chatInput?.addEventListener('keyup', function (e) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
+            updateMentionFromInput();
+        }
+    });
     chatInput?.addEventListener('keydown', function (e) {
+        if (mentionBox && !mentionBox.hasAttribute('hidden') && mentionItems.length) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setMentionActive(mentionActive + 1);
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setMentionActive(mentionActive - 1);
+                return;
+            }
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                if (mentionActive >= 0 && mentionItems[mentionActive]) {
+                    e.preventDefault();
+                    pickMention(mentionItems[mentionActive]);
+                    return;
+                }
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                hideMention();
+                return;
+            }
+        }
         if (e.key !== 'Enter') onLocalTypingActivity();
+    });
+    mentionClose?.addEventListener('click', hideMention);
+    pendingClear?.addEventListener('click', function () {
+        clearPendingProduct();
     });
 
     sendForm?.addEventListener('submit', function (e) {
@@ -3433,17 +3882,29 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
             beginNewConversation();
             return;
         }
+        if (mentionBox && !mentionBox.hasAttribute('hidden') && mentionItems.length && mentionActive >= 0) {
+            pickMention(mentionItems[mentionActive]);
+            return;
+        }
         var text = (chatInput.value || '').trim();
-        if (!text) return;
+        if (!text && !(pendingProduct && pendingProduct.id)) return;
+        if (!text && pendingProduct && pendingProduct.message_template) {
+            text = pendingProduct.message_template;
+        }
+        hideMention();
         clearTimeout(typingIdleTimer);
         clearTimeout(typingSendTimer);
         typingSendTimer = null;
         notifyTyping(false);
         chatInput.disabled = true;
+        var sendPayload = { token: token, message: text };
+        if (pendingProduct && pendingProduct.id) {
+            sendPayload.product_id = pendingProduct.id;
+        }
         fetch(urls.send, {
             method: 'POST',
             headers: headersJson(),
-            body: JSON.stringify({ token: token, message: text })
+            body: JSON.stringify(sendPayload)
         }).then(function (r) {
             return r.json().then(function (data) {
                 return { ok: r.ok, data: data };
@@ -3464,6 +3925,7 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
                 return;
             }
             chatInput.value = '';
+            clearPendingProduct();
             if (res.data && res.data.typing) setPeerTyping(!!res.data.typing.admin);
             renderMessages(res.data.messages || [], false);
             updateStaffStatus(res.data.staff || null, res.data.typing);
@@ -3473,6 +3935,54 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
             alert('Lỗi kết nối.');
         });
     });
+
+    // Public API: product page "Chat với nhân viên" buttons
+    window.shopChatOpenWithProduct = function (product) {
+        if (!product || !product.id) return;
+        setPendingProduct(product, { fillInput: true });
+        if (startForm && startForm.message && !String(startForm.message.value || '').trim()) {
+            startForm.message.value = product.message_template
+                || ('Tôi muốn hỏi / tư vấn về sản phẩm: ' + (product.name || '')
+                    + (product.sku ? (' (SKU: ' + product.sku + ')') : '')
+                    + (product.url ? (' — ' + product.url) : ''));
+        }
+        openWidget();
+        if (token && chatInput) {
+            chatInput.focus();
+        }
+    };
+
+    function productFromDataset(el) {
+        if (!el) return null;
+        var id = Number(el.getAttribute('data-product-id') || 0);
+        if (!id) return null;
+        var name = el.getAttribute('data-product-name') || '';
+        var sku = el.getAttribute('data-product-sku') || null;
+        var url = el.getAttribute('data-product-url') || null;
+        return {
+            id: id,
+            name: name,
+            sku: sku,
+            price_formatted: el.getAttribute('data-product-price') || null,
+            image_url: el.getAttribute('data-product-image') || null,
+            url: url,
+            insert_text: '@' + name,
+            message_template: 'Tôi muốn hỏi / tư vấn về sản phẩm: ' + name
+                + (sku ? (' (SKU: ' + sku + ')') : '')
+                + (url ? (' — ' + url) : '')
+        };
+    }
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-chat-product]');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var product = productFromDataset(btn);
+        if (product) window.shopChatOpenWithProduct(product);
+    });
+
+    restorePendingProduct();
 
     // Resume session if token exists
     if (token) {

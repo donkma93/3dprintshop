@@ -70,6 +70,7 @@
                             } else {
                                 $label = $m->admin?->name ? 'NV: '.$m->admin->name : 'Nhân viên';
                             }
+                            $productCard = \App\Support\ChatProductShare::cardFromMessage($m);
                         @endphp
                         <div class="admin-msg admin-msg--{{ $m->sender }} {{ $m->sender === 'admin' && (int) $m->admin_user_id !== (int) auth()->id() ? 'admin-msg--other-staff' : '' }}" data-id="{{ $m->id }}">
                             <div class="admin-msg__meta">
@@ -77,6 +78,24 @@
                                 · {{ $m->created_at?->format('H:i d/m') }}
                             </div>
                             <div class="admin-msg__body">{!! nl2br(e($m->body)) !!}</div>
+                            @if($productCard)
+                                <a class="admin-product-card" href="{{ $productCard['url'] ?? '#' }}" target="_blank" rel="noopener">
+                                    @if(!empty($productCard['image_url']))
+                                        <img src="{{ $productCard['image_url'] }}" alt="{{ $productCard['name'] ?? '' }}">
+                                    @else
+                                        <div class="admin-product-card__empty"><i class="bi bi-box-seam"></i></div>
+                                    @endif
+                                    <div class="admin-product-card__body">
+                                        <div class="admin-product-card__name">{{ $productCard['name'] ?? 'Sản phẩm' }}</div>
+                                        @if(!empty($productCard['price_formatted']))
+                                            <div class="admin-product-card__price">{{ $productCard['price_formatted'] }}</div>
+                                        @endif
+                                        @if(!empty($productCard['url']))
+                                            <div class="admin-product-card__link">{{ $productCard['url'] }}</div>
+                                        @endif
+                                    </div>
+                                </a>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -86,9 +105,26 @@
                 </div>
             </div>
             <div class="card-footer bg-white">
+                <div id="adminMentionBox" class="admin-mention-box d-none mb-2">
+                    <div class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom small text-secondary">
+                        <span>Chọn sản phẩm (@)</span>
+                        <button type="button" class="btn btn-sm btn-link text-secondary p-0" id="adminMentionClose">Đóng</button>
+                    </div>
+                    <div id="adminMentionList" class="admin-mention-list"></div>
+                    <div id="adminMentionEmpty" class="small text-secondary text-center py-2 d-none">Không tìm thấy sản phẩm</div>
+                </div>
+                <div id="adminPendingProduct" class="admin-pending-product d-none mb-2">
+                    <span id="adminPendingThumb"></span>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="fw-semibold small text-truncate" id="adminPendingName">Sản phẩm</div>
+                        <div class="small text-secondary" id="adminPendingSub">Sẽ gửi kèm thẻ sản phẩm (ảnh + link)</div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-secondary p-0" id="adminPendingClear" aria-label="Bỏ">×</button>
+                </div>
                 <form id="adminReplyForm" action="{{ route('admin.chat.reply', $conversation) }}" method="POST" class="d-flex gap-2">
                     @csrf
-                    <textarea name="message" id="adminReplyInput" class="form-control" rows="2" placeholder="Nhập nội dung trả lời..." required {{ $conversation->status === 'closed' ? 'disabled' : '' }}></textarea>
+                    <input type="hidden" name="product_id" id="adminReplyProductId" value="">
+                    <textarea name="message" id="adminReplyInput" class="form-control" rows="2" placeholder="Nhập trả lời… Gõ @ để chọn sản phẩm" {{ $conversation->status === 'closed' ? 'disabled' : '' }}></textarea>
                     <button class="btn btn-primary px-4" type="submit" {{ $conversation->status === 'closed' ? 'disabled' : '' }}>Gửi</button>
                 </form>
             </div>
@@ -232,6 +268,85 @@
     }
     .admin-typing-dots i:nth-child(2) { animation-delay: .15s; }
     .admin-typing-dots i:nth-child(3) { animation-delay: .3s; }
+    .admin-mention-box {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        background: #fff;
+        max-height: 220px;
+        overflow: hidden;
+    }
+    .admin-mention-list { max-height: 180px; overflow-y: auto; }
+    .admin-mention-item {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        width: 100%;
+        border: 0;
+        background: #fff;
+        text-align: left;
+        padding: .5rem .75rem;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+    }
+    .admin-mention-item:hover, .admin-mention-item.is-active { background: #eff6ff; }
+    .admin-mention-item img {
+        width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #e2e8f0;
+    }
+    .admin-mention-item .meta { min-width: 0; }
+    .admin-mention-item .name { font-weight: 600; font-size: .9rem; }
+    .admin-mention-item .sub { font-size: .78rem; color: #64748b; }
+    .admin-product-card {
+        display: flex;
+        gap: .65rem;
+        margin-top: .4rem;
+        max-width: 280px;
+        text-align: left;
+        text-decoration: none !important;
+        color: inherit !important;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(15,23,42,.06);
+    }
+    .admin-msg--admin .admin-product-card,
+    .admin-msg--bot .admin-product-card {
+        border-color: rgba(255,255,255,.25);
+        background: rgba(255,255,255,.12);
+        color: #fff !important;
+    }
+    .admin-product-card img {
+        width: 72px; height: 72px; object-fit: cover; background: #e2e8f0; flex-shrink: 0;
+    }
+    .admin-product-card__empty {
+        width: 72px; height: 72px; display: flex; align-items: center; justify-content: center;
+        background: #e2e8f0; color: #94a3b8; font-size: 1.3rem; flex-shrink: 0;
+    }
+    .admin-product-card__body { padding: .45rem .55rem .5rem; min-width: 0; }
+    .admin-product-card__name {
+        font-weight: 700; font-size: .82rem; line-height: 1.3;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .admin-product-card__price { font-size: .78rem; font-weight: 700; color: #b45309; margin-top: .15rem; }
+    .admin-msg--admin .admin-product-card__price,
+    .admin-msg--bot .admin-product-card__price { color: #fde68a; }
+    .admin-product-card__link {
+        font-size: .7rem; color: #2563eb; margin-top: .2rem; word-break: break-all;
+    }
+    .admin-msg--admin .admin-product-card__link,
+    .admin-msg--bot .admin-product-card__link { color: #bfdbfe; }
+    .admin-pending-product {
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .45rem .6rem;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        background: #eff6ff;
+    }
+    .admin-pending-product img {
+        width: 36px; height: 36px; border-radius: 8px; object-fit: cover; background: #e2e8f0;
+    }
     @keyframes adminTypingDot {
         0%, 80%, 100% { opacity: .35; transform: translateY(0); }
         40% { opacity: 1; transform: translateY(-2px); }
@@ -251,6 +366,7 @@
     var staffSideHint = document.getElementById('adminStaffSideHint');
     var pollUrl = @json(route('admin.chat.poll', $conversation));
     var typingUrl = @json(route('admin.chat.typing', $conversation));
+    var productsUrl = @json(route('shop.chat.products'));
     var lastId = {{ $conversation->messages->max('id') ?? 0 }};
     var currentUserId = {{ (int) auth()->id() }};
     var csrf = document.querySelector('meta[name="csrf-token"]')?.content
@@ -259,6 +375,21 @@
     var typingSendTimer = null;
     var typingIdleTimer = null;
     var conversationOpen = @json($conversation->status === 'open');
+    var mentionBox = document.getElementById('adminMentionBox');
+    var mentionList = document.getElementById('adminMentionList');
+    var mentionEmpty = document.getElementById('adminMentionEmpty');
+    var mentionClose = document.getElementById('adminMentionClose');
+    var pendingBox = document.getElementById('adminPendingProduct');
+    var pendingThumb = document.getElementById('adminPendingThumb');
+    var pendingName = document.getElementById('adminPendingName');
+    var pendingSub = document.getElementById('adminPendingSub');
+    var pendingClear = document.getElementById('adminPendingClear');
+    var productIdInput = document.getElementById('adminReplyProductId');
+    var mentionTimer = null;
+    var mentionItems = [];
+    var mentionActive = -1;
+    var mentionQuery = null;
+    var pendingProduct = null;
 
     function scrollBottom() {
         log.scrollTop = log.scrollHeight;
@@ -296,18 +427,19 @@
         if (!localTyping) {
             notifyTyping(true);
         } else if (!typingSendTimer) {
+            // Refresh cache TTL while still typing (must be < server TTL 6s).
             typingSendTimer = setTimeout(function () {
                 typingSendTimer = null;
                 if (localTyping) {
                     localTyping = false;
                     notifyTyping(true);
                 }
-            }, 2000);
+            }, 1800);
         }
         clearTimeout(typingIdleTimer);
         typingIdleTimer = setTimeout(function () {
             notifyTyping(false);
-        }, 1800);
+        }, 2500);
     }
 
     function applyStaffInfo(staff) {
@@ -343,6 +475,49 @@
         }
     }
 
+    function productCardHtml(product) {
+        if (!product || !product.id) return '';
+        var img = product.image_url
+            ? '<img src="' + escHtml(product.image_url) + '" alt="">'
+            : '<div class="admin-product-card__empty"><i class="bi bi-box-seam"></i></div>';
+        return '<a class="admin-product-card" href="' + escHtml(product.url || '#') + '" target="_blank" rel="noopener">' +
+            img +
+            '<div class="admin-product-card__body">' +
+                '<div class="admin-product-card__name">' + escHtml(product.name || 'Sản phẩm') + '</div>' +
+                (product.price_formatted ? ('<div class="admin-product-card__price">' + escHtml(product.price_formatted) + '</div>') : '') +
+                (product.url ? ('<div class="admin-product-card__link">' + escHtml(product.url) + '</div>') : '') +
+            '</div></a>';
+    }
+
+    function setPendingProduct(product) {
+        if (!product || !product.id) {
+            clearPendingProduct();
+            return;
+        }
+        pendingProduct = product;
+        if (productIdInput) productIdInput.value = String(product.id);
+        if (pendingBox) {
+            pendingBox.classList.remove('d-none');
+            if (pendingName) pendingName.textContent = product.name || 'Sản phẩm';
+            if (pendingSub) {
+                pendingSub.textContent = (product.price_formatted || '') +
+                    (product.sku ? (' · ' + product.sku) : '') +
+                    ' · kèm ảnh + link khi gửi';
+            }
+            if (pendingThumb) {
+                pendingThumb.innerHTML = product.image_url
+                    ? '<img src="' + escHtml(product.image_url) + '" alt="">'
+                    : '<span class="bg-light rounded d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px"><i class="bi bi-box-seam text-secondary"></i></span>';
+            }
+        }
+    }
+
+    function clearPendingProduct() {
+        pendingProduct = null;
+        if (productIdInput) productIdInput.value = '';
+        if (pendingBox) pendingBox.classList.add('d-none');
+    }
+
     function appendMsg(m) {
         if (document.querySelector('.admin-msg[data-id="' + m.id + '"]')) return;
         var wrap = document.createElement('div');
@@ -357,29 +532,151 @@
                     ? (Number(m.admin_user_id) === currentUserId ? 'Bạn' : (m.admin_name ? ('NV: ' + m.admin_name) : 'Nhân viên'))
                     : 'Trợ lý ảo'));
         wrap.innerHTML =
-            '<div class="admin-msg__meta">' + who + ' · ' + (m.created_at || '') + '</div>' +
+            '<div class="admin-msg__meta">' + escHtml(who) + ' · ' + escHtml(m.created_at || '') + '</div>' +
             '<div class="admin-msg__body"></div>';
-        wrap.querySelector('.admin-msg__body').textContent = m.body;
+        wrap.querySelector('.admin-msg__body').textContent = m.body || '';
+        if (m.product) {
+            wrap.insertAdjacentHTML('beforeend', productCardHtml(m.product));
+        }
         log.appendChild(wrap);
         lastId = Math.max(lastId, m.id);
         if (m.sender === 'guest') setGuestTyping(false);
         scrollBottom();
     }
 
-    input?.addEventListener('input', onLocalTypingActivity);
+    function escHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+    }
+    function getMentionMatch(value, caret) {
+        if (caret == null) caret = (value || '').length;
+        var before = String(value || '').slice(0, caret);
+        var m = before.match(/(^|[\s\n])@([^\s@]{0,40})$/);
+        if (!m) return null;
+        return { start: caret - m[2].length - 1, end: caret, query: m[2] };
+    }
+    function hideMention() {
+        mentionQuery = null;
+        mentionItems = [];
+        mentionActive = -1;
+        if (mentionBox) mentionBox.classList.add('d-none');
+        if (mentionList) mentionList.innerHTML = '';
+        if (mentionEmpty) mentionEmpty.classList.add('d-none');
+    }
+    function renderMentionList(items) {
+        mentionItems = items || [];
+        mentionActive = mentionItems.length ? 0 : -1;
+        if (!mentionList) return;
+        mentionList.innerHTML = '';
+        if (!mentionItems.length) {
+            if (mentionEmpty) mentionEmpty.classList.remove('d-none');
+            return;
+        }
+        if (mentionEmpty) mentionEmpty.classList.add('d-none');
+        mentionItems.forEach(function (p, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'admin-mention-item' + (idx === 0 ? ' is-active' : '');
+            var img = p.image_url
+                ? '<img src="' + escHtml(p.image_url) + '" alt="">'
+                : '<span class="bg-light rounded d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px"><i class="bi bi-box-seam text-secondary"></i></span>';
+            btn.innerHTML = img +
+                '<span class="meta"><div class="name">' + escHtml(p.name) + '</div>' +
+                '<div class="sub">' + escHtml(p.price_formatted || '') + (p.sku ? (' · ' + escHtml(p.sku)) : '') + '</div></span>';
+            btn.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                pickMention(p);
+            });
+            mentionList.appendChild(btn);
+        });
+    }
+    function setMentionActive(idx) {
+        if (!mentionItems.length) return;
+        mentionActive = (idx + mentionItems.length) % mentionItems.length;
+        var nodes = mentionList ? mentionList.querySelectorAll('.admin-mention-item') : [];
+        nodes.forEach(function (n, i) { n.classList.toggle('is-active', i === mentionActive); });
+    }
+    function fetchMentionProducts(q) {
+        fetch(productsUrl + '?q=' + encodeURIComponent(q || ''), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (!mentionQuery) return;
+            if (mentionBox) mentionBox.classList.remove('d-none');
+            renderMentionList((data && data.data) ? data.data : []);
+        }).catch(function () {
+            if (mentionBox) mentionBox.classList.remove('d-none');
+            renderMentionList([]);
+        });
+    }
+    function updateMentionFromInput() {
+        if (!input || input.disabled) { hideMention(); return; }
+        var match = getMentionMatch(input.value, input.selectionStart);
+        if (!match) { hideMention(); return; }
+        mentionQuery = match;
+        clearTimeout(mentionTimer);
+        mentionTimer = setTimeout(function () {
+            if (mentionQuery) fetchMentionProducts(mentionQuery.query);
+        }, 120);
+    }
+    function pickMention(product) {
+        if (!input || !product) return;
+        var value = input.value || '';
+        var start = mentionQuery ? mentionQuery.start : value.length;
+        var end = mentionQuery ? mentionQuery.end : value.length;
+        var insert = 'Tôi đang tư vấn sản phẩm: ' + product.name +
+            (product.sku ? (' (SKU: ' + product.sku + ')') : '') +
+            (product.price_formatted ? (' — ' + product.price_formatted) : '') +
+            (product.url ? (' — ' + product.url) : '') + ' ';
+        input.value = value.slice(0, start) + insert + value.slice(end);
+        var caret = start + insert.length;
+        input.focus();
+        try { input.setSelectionRange(caret, caret); } catch (e) {}
+        setPendingProduct(product);
+        hideMention();
+        onLocalTypingActivity();
+    }
+
+    input?.addEventListener('input', function () {
+        onLocalTypingActivity();
+        updateMentionFromInput();
+    });
+    input?.addEventListener('click', updateMentionFromInput);
     input?.addEventListener('keydown', function (e) {
+        if (mentionBox && !mentionBox.classList.contains('d-none') && mentionItems.length) {
+            if (e.key === 'ArrowDown') { e.preventDefault(); setMentionActive(mentionActive + 1); return; }
+            if (e.key === 'ArrowUp') { e.preventDefault(); setMentionActive(mentionActive - 1); return; }
+            if ((e.key === 'Enter' && !e.shiftKey) || e.key === 'Tab') {
+                if (mentionActive >= 0 && mentionItems[mentionActive]) {
+                    e.preventDefault();
+                    pickMention(mentionItems[mentionActive]);
+                    return;
+                }
+            }
+            if (e.key === 'Escape') { e.preventDefault(); hideMention(); return; }
+        }
         if (e.key !== 'Enter') onLocalTypingActivity();
     });
+    mentionClose?.addEventListener('click', hideMention);
+    pendingClear?.addEventListener('click', clearPendingProduct);
 
     form?.addEventListener('submit', function (e) {
         e.preventDefault();
+        if (mentionBox && !mentionBox.classList.contains('d-none') && mentionItems.length && mentionActive >= 0) {
+            pickMention(mentionItems[mentionActive]);
+            return;
+        }
         var text = (input.value || '').trim();
-        if (!text) return;
+        if (!text && !(pendingProduct && pendingProduct.id)) return;
+        hideMention();
         clearTimeout(typingIdleTimer);
         clearTimeout(typingSendTimer);
         typingSendTimer = null;
         notifyTyping(false);
         var fd = new FormData(form);
+        if (pendingProduct && pendingProduct.id) {
+            fd.set('product_id', String(pendingProduct.id));
+        }
         fetch(form.action, {
             method: 'POST',
             headers: {
@@ -388,16 +685,52 @@
                 'X-CSRF-TOKEN': csrf
             },
             body: fd
-        }).then(function (r) { return r.json(); }).then(function (data) {
+        }).then(function (r) {
+            return r.json().then(function (data) {
+                return { ok: r.ok, status: r.status, data: data };
+            });
+        }).then(function (res) {
+            var data = res.data || {};
+            if (!res.ok) {
+                if (data.closed || data.status === 'closed') {
+                    applyClosedUi(data.message || 'Hội thoại đã đóng do quá 30 phút không có tin nhắn.');
+                    return;
+                }
+                alert(data.message || 'Không gửi được tin nhắn.');
+                return;
+            }
             if (data.message) appendMsg(data.message);
             if (data.typing) setGuestTyping(!!data.typing.guest);
             if (data.staff) applyStaffInfo(data.staff);
             input.value = '';
+            clearPendingProduct();
             input.focus();
         }).catch(function () {
             form.submit();
         });
     });
+
+    function applyClosedUi(notice) {
+        conversationOpen = false;
+        setGuestTyping(false);
+        notifyTyping(false);
+        if (input) {
+            input.disabled = true;
+            input.placeholder = 'Hội thoại đã đóng';
+        }
+        var btn = form ? form.querySelector('button[type="submit"]') : null;
+        if (btn) btn.disabled = true;
+        clearPendingProduct();
+        if (notice && window.appToast) {
+            appToast.warning(notice);
+        } else if (notice) {
+            // one-time banner via alert only if toast missing
+        }
+        if (staffBanner && staffBannerText) {
+            staffBanner.classList.remove('d-none', 'is-other');
+            staffBannerText.textContent = 'Hội thoại đã đóng (quá 30 phút không nhắn tin hoặc đã đóng thủ công)';
+        }
+    }
 
     setInterval(function () {
         fetch(pollUrl + '?after_id=' + lastId, {
@@ -414,8 +747,8 @@
                 setGuestTyping(!!data.typing.guest);
             }
             if (data.staff) applyStaffInfo(data.staff);
-            if (data.status === 'closed') {
-                conversationOpen = false;
+            if (data.status === 'closed' && conversationOpen) {
+                applyClosedUi('Hội thoại đã tự đóng vì không có tin nhắn mới trong 30 phút.');
             }
         }).catch(function () {});
     }, 2000);

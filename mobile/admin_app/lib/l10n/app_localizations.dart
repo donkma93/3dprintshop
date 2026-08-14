@@ -160,6 +160,34 @@ class AppLocalizations {
   String get lowStock => t('lowStock');
   String get recentSales => t('recentSales');
   String get openOrders => t('openOrders');
+  String get activeProducts => t('activeProducts');
+  String get materialInputsCount => t('materialInputsCount');
+  String get openChats => t('openChats');
+  String get materialStockValue => t('materialStockValue');
+  String get equipmentValue => t('equipmentValue');
+  String get catalogSalesValue => t('catalogSalesValue');
+  String get catalogCostValue => t('catalogCostValue');
+  String get potentialMargin => t('potentialMargin');
+  String get inputsTotal30d => t('inputsTotal30d');
+  String get inputsTotalAll => t('inputsTotalAll');
+  String get chartActivity => t('chartActivity');
+  String get chartStockOverview => t('chartStockOverview');
+  String get chartCategories => t('chartCategories');
+  String get chartInputsSpend => t('chartInputsSpend');
+  String get chartAssetBreakdown => t('chartAssetBreakdown');
+  String get chartProductsCreated => t('chartProductsCreated');
+  String get chartInputsCount => t('chartInputsCount');
+  String get stockActiveProducts => t('stockActiveProducts');
+  String get stockHiddenProducts => t('stockHiddenProducts');
+  String get stockOkMaterials => t('stockOkMaterials');
+  String get stockLowMaterials => t('stockLowMaterials');
+  String get assetMaterialStock => t('assetMaterialStock');
+  String get assetEquipment => t('assetEquipment');
+  String get assetCatalogSales => t('assetCatalogSales');
+  String get assetCatalogCost => t('assetCatalogCost');
+  String get lowStockMaterials => t('lowStockMaterials');
+  String get revenueRestricted => t('revenueRestricted');
+  String get noChartData => t('noChartData');
 
   // Sales
   String get sell => t('sell');
@@ -382,6 +410,35 @@ class AppLocalizations {
       'lowStock': 'Sắp hết hàng',
       'recentSales': 'Bán gần đây',
       'openOrders': 'Đơn chờ xử lý',
+      'activeProducts': 'đang hiển thị',
+      'materialInputsCount': 'Phiếu nhập',
+      'openChats': 'Chat đang mở',
+      'materialStockValue': 'Giá trị tồn nguyên liệu',
+      'equipmentValue': 'Giá trị thiết bị',
+      'catalogSalesValue': 'Doanh số kho (giá bán × tồn)',
+      'catalogCostValue': 'Giá vốn SP × tồn',
+      'potentialMargin': 'Biên tiềm năng',
+      'inputsTotal30d': 'Chi nhập NL (30 ngày)',
+      'inputsTotalAll': 'Tổng chi nhập NL',
+      'chartActivity': 'Hoạt động 6 tháng gần đây',
+      'chartStockOverview': 'Cơ cấu tồn kho / sản phẩm',
+      'chartCategories': 'Sản phẩm theo danh mục',
+      'chartInputsSpend': 'Chi nhập nguyên liệu 6 tháng',
+      'chartAssetBreakdown': 'Cơ cấu giá trị tài sản',
+      'chartProductsCreated': 'SP tạo mới',
+      'chartInputsCount': 'Phiếu nhập',
+      'stockActiveProducts': 'SP đang bán',
+      'stockHiddenProducts': 'SP ẩn',
+      'stockOkMaterials': 'NL ổn định',
+      'stockLowMaterials': 'NL sắp hết',
+      'assetMaterialStock': 'Giá trị tồn NL',
+      'assetEquipment': 'Giá trị thiết bị',
+      'assetCatalogSales': 'Giá trị SP (giá bán×kho)',
+      'assetCatalogCost': 'Giá vốn SP×kho',
+      'lowStockMaterials': 'Nguyên liệu sắp hết',
+      'revenueRestricted':
+          'Số liệu doanh thu / giá trị chỉ dành cho Quản trị viên. Tài khoản của bạn không xem được các chỉ số này.',
+      'noChartData': 'Chưa có dữ liệu biểu đồ',
       'sell': 'Bán',
       'lookup': 'Tra mã',
       'scanQr': 'Quét QR',
@@ -595,6 +652,35 @@ class AppLocalizations {
       'lowStock': 'Low stock',
       'recentSales': 'Recent sales',
       'openOrders': 'Open orders',
+      'activeProducts': 'active',
+      'materialInputsCount': 'Material inputs',
+      'openChats': 'Open chats',
+      'materialStockValue': 'Material stock value',
+      'equipmentValue': 'Equipment value',
+      'catalogSalesValue': 'Catalog sales value (price × stock)',
+      'catalogCostValue': 'Catalog cost value',
+      'potentialMargin': 'Potential margin',
+      'inputsTotal30d': 'Material spend (30 days)',
+      'inputsTotalAll': 'Total material spend',
+      'chartActivity': 'Activity — last 6 months',
+      'chartStockOverview': 'Stock / product mix',
+      'chartCategories': 'Products by category',
+      'chartInputsSpend': 'Material spend — 6 months',
+      'chartAssetBreakdown': 'Asset value breakdown',
+      'chartProductsCreated': 'Products created',
+      'chartInputsCount': 'Inputs',
+      'stockActiveProducts': 'Active products',
+      'stockHiddenProducts': 'Hidden products',
+      'stockOkMaterials': 'Materials OK',
+      'stockLowMaterials': 'Materials low',
+      'assetMaterialStock': 'Material stock value',
+      'assetEquipment': 'Equipment value',
+      'assetCatalogSales': 'Catalog sales × stock',
+      'assetCatalogCost': 'Catalog cost × stock',
+      'lowStockMaterials': 'Low-stock materials',
+      'revenueRestricted':
+          'Revenue and asset values are admin-only. Your account cannot view these metrics.',
+      'noChartData': 'No chart data yet',
       'sell': 'Sell',
       'lookup': 'Look up',
       'scanQr': 'Scan QR',

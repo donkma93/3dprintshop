@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Shop;
 use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\Product;
+use App\Support\ChatIdleCloser;
+use App\Support\ChatProductShare;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -13,7 +16,34 @@ use Illuminate\Support\Str;
 
 class ChatController extends Controller
 {
-    private const TYPING_TTL_SECONDS = 4;
+    /** Keep slightly above poll interval (2–3s) so indicators survive network jitter. */
+    private const TYPING_TTL_SECONDS = 6;
+
+    /**
+     * Product picker for chat @-mentions (guest widget + staff).
+     */
+    public function products(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $query = Product::query()
+            ->where('is_active', true)
+            ->orderBy('name');
+
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('name', 'like', "%{$q}%")
+                    ->orWhere('sku', 'like', "%{$q}%");
+            });
+        }
+
+        $items = $query->limit(12)->get()
+            ->map(fn (Product $p) => ChatProductShare::snapshot($p))
+            ->filter()
+            ->values();
+
+        return response()->json(['data' => $items]);
+    }
 
     public function show(Request $request): JsonResponse
     {
@@ -27,12 +57,15 @@ class ChatController extends Controller
             return response()->json(['conversation' => null, 'messages' => []]);
         }
 
+        ChatIdleCloser::closeIfIdle($conversation);
+        $conversation->refresh();
+
         $afterId = (int) $request->query('after_id', 0);
         // mark_read=1 khi khách đang mở widget; poll nền (widget đóng) không đánh dấu đã đọc
         $markRead = $request->boolean('mark_read', $afterId === 0);
 
         $messages = $conversation->messages()
-            ->with('admin:id,name')
+            ->with(['admin:id,name', 'product'])
             ->when($afterId > 0, fn ($q) => $q->where('id', '>', $afterId))
             ->orderBy('id')
             ->get()
@@ -73,8 +106,20 @@ class ChatController extends Controller
         ]);
 
         $conversation = ChatConversation::where('guest_token', $data['token'])->first();
-        if (! $conversation || $conversation->status === 'closed') {
+        if (! $conversation) {
             return response()->json(['ok' => false], 404);
+        }
+
+        if (ChatIdleCloser::closeIfIdle($conversation)) {
+            $conversation->refresh();
+        }
+
+        if ($conversation->status === 'closed') {
+            return response()->json([
+                'ok' => false,
+                'closed' => true,
+                'message' => ChatIdleCloser::CLOSE_MESSAGE,
+            ], 422);
         }
 
         if ($data['typing']) {
@@ -106,6 +151,7 @@ class ChatController extends Controller
             'guest_phone' => ['nullable', 'string', 'max:40'],
             'guest_email' => ['nullable', 'email', 'max:150'],
             'message' => ['nullable', 'string', 'max:2000'],
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
         if (empty($data['guest_phone']) && empty($data['guest_email'])) {
@@ -113,6 +159,10 @@ class ChatController extends Controller
                 'message' => 'Vui lòng để lại số điện thoại hoặc email để chúng tôi liên hệ lại.',
             ], 422);
         }
+
+        [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
+            isset($data['product_id']) ? (int) $data['product_id'] : null
+        );
 
         $conversation = ChatConversation::create([
             'guest_token' => ChatConversation::newGuestToken(),
@@ -137,19 +187,25 @@ class ChatController extends Controller
             'body' => $welcome,
         ]);
 
+        $guestBody = trim((string) ($data['message'] ?? ''));
+        if ($guestBody === '') {
+            $guestBody = $productSnapshot['message_template']
+                ?? 'Khách vừa bắt đầu chat và để lại thông tin liên hệ.';
+        }
+
         // Luôn có tin guest để admin nhận notification (kể cả chỉ để lại SĐT)
         ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'guest',
-            'body' => ! empty($data['message'])
-                ? $data['message']
-                : 'Khách vừa bắt đầu chat và để lại thông tin liên hệ.',
+            'body' => $guestBody,
+            'product_id' => $productId,
+            'product_snapshot' => $productSnapshot,
         ]);
 
         $conversation->last_message_at = now();
         $conversation->save();
 
-        $messages = $conversation->messages()->with('admin:id,name')->orderBy('id')->get()
+        $messages = $conversation->messages()->with(['admin:id,name', 'product'])->orderBy('id')->get()
             ->map(fn (ChatMessage $m) => $this->formatMessage($m));
 
         return response()->json([
@@ -169,7 +225,8 @@ class ChatController extends Controller
 
         $data = $request->validate([
             'token' => ['required', 'string', 'max:64'],
-            'message' => ['required', 'string', 'max:2000'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
         $conversation = ChatConversation::where('guest_token', $data['token'])->first();
@@ -179,18 +236,37 @@ class ChatController extends Controller
                 'can_restart' => true,
             ], 404);
         }
+
+        if (ChatIdleCloser::closeIfIdle($conversation)) {
+            $conversation->refresh();
+        }
+
         if ($conversation->status === 'closed') {
             return response()->json([
-                'message' => 'Hội thoại đã đóng. Vui lòng mở hội thoại mới để tiếp tục.',
+                'message' => ChatIdleCloser::CLOSE_MESSAGE,
                 'can_restart' => true,
                 'conversation' => $this->formatConversation($conversation),
             ], 422);
         }
 
+        [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
+            isset($data['product_id']) ? (int) $data['product_id'] : null
+        );
+
+        $body = trim((string) ($data['message'] ?? ''));
+        if ($body === '' && $productSnapshot) {
+            $body = (string) ($productSnapshot['message_template'] ?? '');
+        }
+        if ($body === '') {
+            return response()->json(['message' => 'Vui lòng nhập tin nhắn hoặc chọn sản phẩm.'], 422);
+        }
+
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'guest',
-            'body' => trim($data['message']),
+            'body' => $body,
+            'product_id' => $productId,
+            'product_snapshot' => $productSnapshot,
         ]);
 
         $this->setTyping($conversation->id, 'guest', false);
@@ -201,7 +277,7 @@ class ChatController extends Controller
 
         $guestCount = $conversation->messages()->where('sender', 'guest')->count();
         if ($guestCount <= 2) {
-            $bot = $this->autoReply(trim($data['message']));
+            $bot = $this->autoReply($body);
             if ($bot) {
                 ChatMessage::create([
                     'conversation_id' => $conversation->id,
@@ -214,7 +290,7 @@ class ChatController extends Controller
         }
 
         $messages = $conversation->messages()
-            ->with('admin:id,name')
+            ->with(['admin:id,name', 'product'])
             ->where('id', '>=', $message->id)
             ->orderBy('id')
             ->get()
@@ -349,6 +425,8 @@ class ChatController extends Controller
             'admin_name' => $adminName,
             'sender_label' => $label,
             'body' => $m->body,
+            'product_id' => $m->product_id,
+            'product' => ChatProductShare::cardFromMessage($m),
             'created_at' => $m->created_at?->format('H:i d/m'),
             'created_at_iso' => $m->created_at?->toIso8601String(),
         ];

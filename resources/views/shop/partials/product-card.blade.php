@@ -30,6 +30,19 @@
                 <em>{{ number_format($product->final_price, 0, ',', '.') }}</em> đ
             @endif
         </div>
-        <a href="{{ route('shop.products.show', $product->slug) }}#order-form" class="product-card__link">Đặt hàng</a>
+        <div class="d-flex flex-column align-items-end gap-1">
+            <button type="button"
+                    class="product-card__link product-card__chat-btn border-0 bg-transparent p-0"
+                    data-chat-product
+                    data-product-id="{{ $product->id }}"
+                    data-product-name="{{ $product->name }}"
+                    data-product-sku="{{ $product->sku }}"
+                    data-product-price="{{ number_format($product->final_price, 0, ',', '.') }} đ"
+                    data-product-image="{{ $product->image_url }}"
+                    data-product-url="{{ route('shop.products.show', $product->slug) }}">
+                Chat tư vấn
+            </button>
+            <a href="{{ route('shop.products.show', $product->slug) }}#order-form" class="product-card__link">Đặt hàng</a>
+        </div>
     </div>
 </article>

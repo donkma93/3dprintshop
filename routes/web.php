@@ -57,6 +57,7 @@ Route::post('/dat-hang', [ShopOrderRequestController::class, 'store'])
 */
 Route::prefix('chat')->name('shop.chat.')->group(function () {
     Route::get('/', [ShopChatController::class, 'show'])->name('show');
+    Route::get('/products', [ShopChatController::class, 'products'])->name('products');
     Route::post('/start', [ShopChatController::class, 'start'])->name('start');
     Route::post('/send', [ShopChatController::class, 'send'])->name('send');
     Route::post('/typing', [ShopChatController::class, 'typing'])->name('typing');

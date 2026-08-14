@@ -108,8 +108,24 @@
                 <span class="chat-typing__dots" aria-hidden="true"><i></i><i></i><i></i></span>
                 <span class="chat-typing__text" id="chatTypingText">Nhân viên đang nhập…</span>
             </div>
+            <div class="chat-mention" id="chatMentionBox" hidden>
+                <div class="chat-mention__head">
+                    <span>Chọn sản phẩm (@)</span>
+                    <button type="button" class="chat-mention__close" id="chatMentionClose" aria-label="Đóng">×</button>
+                </div>
+                <div class="chat-mention__list" id="chatMentionList" role="listbox"></div>
+                <div class="chat-mention__empty" id="chatMentionEmpty" hidden>Không tìm thấy sản phẩm</div>
+            </div>
+            <div class="chat-pending-product" id="chatPendingProduct" aria-live="polite">
+                <span class="chat-pending-product__thumb" id="chatPendingThumb"></span>
+                <div class="chat-pending-product__meta">
+                    <div class="chat-pending-product__name" id="chatPendingName">Sản phẩm</div>
+                    <div class="chat-pending-product__sub" id="chatPendingSub">Sẽ gửi kèm thẻ sản phẩm (ảnh + link)</div>
+                </div>
+                <button type="button" class="chat-pending-product__clear" id="chatPendingClear" aria-label="Bỏ sản phẩm">×</button>
+            </div>
             <form id="chatSendForm" class="chat-send">
-                <input type="text" id="chatInput" maxlength="2000" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <input type="text" id="chatInput" maxlength="2000" placeholder="Nhập tin nhắn… Gõ @ để chọn sản phẩm" autocomplete="off">
                 <button type="submit" class="chat-send__btn" aria-label="Gửi"><i class="bi bi-send-fill"></i></button>
             </form>
         </div>

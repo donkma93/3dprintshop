@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\ChatProductShare;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -27,6 +28,8 @@ class ChatMessageResource extends JsonResource
                 default => 'Trợ lý ảo',
             },
             'body' => $this->body,
+            'product_id' => $this->product_id,
+            'product' => ChatProductShare::cardFromMessage($this->resource),
             'is_read' => (bool) $this->is_read,
             'created_at' => optional($this->created_at)->toIso8601String(),
             'created_at_label' => optional($this->created_at)->format('H:i d/m'),

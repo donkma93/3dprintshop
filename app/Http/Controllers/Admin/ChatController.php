@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Support\ChatIdleCloser;
+use App\Support\ChatProductShare;
+use App\Support\ChatUnread;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -12,7 +15,7 @@ use Illuminate\View\View;
 
 class ChatController extends Controller
 {
-    private const TYPING_TTL_SECONDS = 4;
+    private const TYPING_TTL_SECONDS = 6;
 
     public function index(Request $request): View
     {
@@ -25,11 +28,7 @@ class ChatController extends Controller
             ])
             ->withCount([
                 'messages as unread_count' => function ($q) {
-                    $q->where('sender', 'guest')
-                        ->where(function ($inner) {
-                            $inner->whereColumn('chat_messages.created_at', '>', 'chat_conversations.admin_last_read_at')
-                                ->orWhereNull('chat_conversations.admin_last_read_at');
-                        });
+                    ChatUnread::unreadCountRelation($q);
                 },
             ])
             ->when($status !== 'all', fn ($q) => $q->where('status', $status))
@@ -45,8 +44,11 @@ class ChatController extends Controller
 
     public function show(ChatConversation $conversation): View
     {
+        ChatIdleCloser::closeIfIdle($conversation);
+        $conversation->refresh();
+
         $conversation->load([
-            'messages' => fn ($q) => $q->orderBy('id')->with('admin:id,name'),
+            'messages' => fn ($q) => $q->orderBy('id')->with(['admin:id,name', 'product']),
             'lastAdmin:id,name',
         ]);
 
@@ -64,21 +66,64 @@ class ChatController extends Controller
     public function reply(Request $request, ChatConversation $conversation): JsonResponse|\Illuminate\Http\RedirectResponse
     {
         $data = $request->validate([
-            'message' => ['required', 'string', 'max:2000'],
+            'message' => ['nullable', 'string', 'max:2000'],
+            'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
+        // Idle auto-close takes precedence over silent reopen on reply.
+        if (ChatIdleCloser::closeIfIdle($conversation)) {
+            $conversation->refresh();
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => ChatIdleCloser::CLOSE_MESSAGE,
+                    'closed' => true,
+                    'status' => 'closed',
+                ], 422);
+            }
+
+            return back()->withErrors(['message' => ChatIdleCloser::CLOSE_MESSAGE]);
+        }
+
         if ($conversation->status === 'closed') {
-            $conversation->status = 'open';
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'message' => 'Hội thoại đã đóng. Hãy mở lại nếu cần tiếp tục.',
+                    'closed' => true,
+                    'status' => 'closed',
+                ], 422);
+            }
+
+            return back()->withErrors(['message' => 'Hội thoại đã đóng. Hãy mở lại nếu cần tiếp tục.']);
+        }
+
+        [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
+            isset($data['product_id']) ? (int) $data['product_id'] : null
+        );
+
+        $body = trim((string) ($data['message'] ?? ''));
+        if ($body === '' && $productSnapshot) {
+            $body = 'Tôi đang tư vấn sản phẩm: '.($productSnapshot['name'] ?? '')
+                .(! empty($productSnapshot['sku']) ? ' (SKU: '.$productSnapshot['sku'].')' : '')
+                .(! empty($productSnapshot['url']) ? ' — '.$productSnapshot['url'] : '');
+        }
+        if ($body === '') {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => 'Vui lòng nhập tin nhắn hoặc chọn sản phẩm.'], 422);
+            }
+
+            return back()->withErrors(['message' => 'Vui lòng nhập tin nhắn hoặc chọn sản phẩm.']);
         }
 
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'admin',
             'admin_user_id' => $request->user()->id,
-            'body' => trim($data['message']),
+            'body' => $body,
+            'product_id' => $productId,
+            'product_snapshot' => $productSnapshot,
             'is_read' => true,
         ]);
-        $message->load('admin:id,name');
+        $message->load(['admin:id,name', 'product']);
 
         $this->setTyping($conversation->id, 'admin', false);
         $this->setAdminTypingUser($conversation->id, $request->user()->id, false);
@@ -109,8 +154,17 @@ class ChatController extends Controller
             'typing' => ['required', 'boolean'],
         ]);
 
+        if (ChatIdleCloser::closeIfIdle($conversation)) {
+            $conversation->refresh();
+        }
+
         if ($conversation->status === 'closed') {
-            return response()->json(['ok' => false, 'message' => 'Hội thoại đã đóng.'], 422);
+            return response()->json([
+                'ok' => false,
+                'closed' => true,
+                'message' => ChatIdleCloser::CLOSE_MESSAGE,
+                'status' => 'closed',
+            ], 422);
         }
 
         $typing = (bool) $data['typing'];
@@ -130,11 +184,14 @@ class ChatController extends Controller
 
     public function poll(Request $request, ChatConversation $conversation): JsonResponse
     {
+        ChatIdleCloser::closeIfIdle($conversation);
+        $conversation->refresh();
+
         $afterId = (int) $request->query('after_id', 0);
         $currentUserId = (int) $request->user()->id;
 
         $messages = $conversation->messages()
-            ->with('admin:id,name')
+            ->with(['admin:id,name', 'product'])
             ->when($afterId > 0, fn ($q) => $q->where('id', '>', $afterId))
             ->orderBy('id')
             ->get()
@@ -235,6 +292,8 @@ class ChatController extends Controller
             'admin_name' => $adminName,
             'sender_label' => $label,
             'body' => $m->body,
+            'product_id' => $m->product_id,
+            'product' => ChatProductShare::cardFromMessage($m),
             'created_at' => $m->created_at?->format('H:i d/m'),
             'is_mine' => $m->sender === 'admin' && (int) $m->admin_user_id === $currentUserId,
         ];
@@ -378,44 +437,17 @@ class ChatController extends Controller
 
     private function markConversationRead(ChatConversation $conversation): void
     {
-        $conversation->admin_last_read_at = now();
-        $conversation->save();
-
-        $conversation->messages()
-            ->where('sender', 'guest')
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
+        ChatUnread::markConversationRead($conversation);
     }
 
     private function unreadConversationCount(): int
     {
-        return ChatConversation::query()
-            ->where('status', 'open')
-            ->where(function ($q) {
-                $q->whereNull('admin_last_read_at')
-                    ->orWhereHas('messages', function ($mq) {
-                        $mq->where('sender', 'guest')
-                            ->where(function ($inner) {
-                                $inner->where('is_read', false)
-                                    ->orWhereColumn('chat_messages.created_at', '>', 'chat_conversations.admin_last_read_at');
-                            });
-                    });
-            })
-            ->count();
+        return ChatUnread::conversationCount();
     }
 
     private function unreadGuestMessageCount(): int
     {
-        return ChatMessage::query()
-            ->where('sender', 'guest')
-            ->where(function ($q) {
-                $q->where('is_read', false)
-                    ->orWhereHas('conversation', function ($cq) {
-                        $cq->whereNull('admin_last_read_at')
-                            ->orWhereColumn('chat_messages.created_at', '>', 'chat_conversations.admin_last_read_at');
-                    });
-            })
-            ->count();
+        return ChatUnread::guestMessageCount();
     }
 
     private function notificationList(int $limit = 40): array
@@ -455,14 +487,12 @@ class ChatController extends Controller
         $isNewConversation = isset($firstGuestIds[$m->conversation_id])
             && (int) $firstGuestIds[$m->conversation_id] === (int) $m->id;
 
-        $isUnread = ! $m->is_read;
-        if ($c) {
+        $isUnread = false;
+        if ($c && $c->status === 'open') {
             if (! $c->admin_last_read_at) {
                 $isUnread = true;
             } elseif ($m->created_at && $m->created_at->gt($c->admin_last_read_at)) {
                 $isUnread = true;
-            } elseif ($m->is_read && $c->admin_last_read_at && $m->created_at && $m->created_at->lte($c->admin_last_read_at)) {
-                $isUnread = false;
             }
         }
 
@@ -483,14 +513,10 @@ class ChatController extends Controller
 
     public function close(ChatConversation $conversation)
     {
-        $conversation->status = 'closed';
-        $conversation->save();
-
-        ChatMessage::create([
-            'conversation_id' => $conversation->id,
-            'sender' => 'bot',
-            'body' => 'Cuộc trò chuyện đã được đóng bởi nhân viên. Cảm ơn bạn đã liên hệ!',
-        ]);
+        ChatIdleCloser::closeConversation(
+            $conversation,
+            'Cuộc trò chuyện đã được đóng bởi nhân viên. Cảm ơn bạn đã liên hệ!'
+        );
 
         return back()->with('success', 'Đã đóng cuộc trò chuyện.');
     }

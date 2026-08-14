@@ -14,6 +14,9 @@ class Kernel extends ConsoleKernel
     {
         // Xóa vĩnh viễn mục trong thùng rác sau 30 ngày
         $schedule->command('trash:purge')->dailyAt('02:00');
+
+        // Đóng chat không có tin nhắn mới trong 30 phút + tin bot thông báo
+        $schedule->command('chat:close-idle')->everyMinute();
     }
 
     /**

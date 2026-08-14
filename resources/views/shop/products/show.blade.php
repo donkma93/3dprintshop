@@ -57,6 +57,17 @@
                 <a href="#order-form" class="btn-primary-shop">
                     <i class="bi bi-cart-plus"></i> Đặt hàng / để lại SĐT
                 </a>
+                <button type="button"
+                        class="btn-secondary-shop"
+                        id="productChatStaffBtn"
+                        data-product-id="{{ $product->id }}"
+                        data-product-name="{{ $product->name }}"
+                        data-product-sku="{{ $product->sku }}"
+                        data-product-price="{{ number_format($product->final_price, 0, ',', '.') }} đ"
+                        data-product-image="{{ $product->image_url }}"
+                        data-product-url="{{ route('shop.products.show', $product->slug) }}">
+                    <i class="bi bi-chat-dots"></i> Chat với nhân viên bán hàng
+                </button>
                 @if(!empty($settings['hotline'] ?? $settings['phone'] ?? null))
                 <a href="tel:{{ preg_replace('/\s+/', '', $settings['hotline'] ?? $settings['phone'] ?? '') }}" class="btn-secondary-shop">
                     <i class="bi bi-telephone"></i> Gọi đặt hàng
@@ -128,3 +139,29 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    var btn = document.getElementById('productChatStaffBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+        var product = {
+            id: Number(btn.getAttribute('data-product-id') || 0),
+            name: btn.getAttribute('data-product-name') || '',
+            sku: btn.getAttribute('data-product-sku') || null,
+            price_formatted: btn.getAttribute('data-product-price') || null,
+            image_url: btn.getAttribute('data-product-image') || null,
+            url: btn.getAttribute('data-product-url') || null
+        };
+        product.message_template = 'Tôi muốn hỏi / tư vấn về sản phẩm: ' + product.name
+            + (product.sku ? (' (SKU: ' + product.sku + ')') : '')
+            + (product.url ? (' — ' + product.url) : '');
+        product.insert_text = '@' + product.name;
+        if (typeof window.shopChatOpenWithProduct === 'function') {
+            window.shopChatOpenWithProduct(product);
+        }
+    });
+})();
+</script>
+@endpush

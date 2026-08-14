@@ -38,6 +38,8 @@ class ProductResource extends JsonResource
             'stock' => (int) $this->stock,
             'image' => $this->image,
             'image_url' => $this->image ? asset('storage/'.$this->image) : null,
+            // Public product page (for chat product share cards / mentions).
+            'url' => $this->slug ? route('shop.products.show', $this->slug) : null,
             'material_used' => $this->material_used,
             'weight_grams' => $this->weight_grams !== null ? (float) $this->weight_grams : null,
             'is_featured' => (bool) $this->is_featured,

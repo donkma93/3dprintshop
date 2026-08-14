@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/permissions/permission_guard.dart';
-import '../auth/auth_controller.dart';
+import '../../l10n/app_localizations.dart';
 
 class HomeShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
@@ -19,23 +19,22 @@ class HomeShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authControllerProvider).user;
+    final l10n = context.l10n;
     final destinations = <_Dest>[
       if (canAccess(ref, 'dashboard.view'))
-        _Dest(0, Icons.dashboard_outlined, Icons.dashboard, 'Tổng quan'),
+        _Dest(0, Icons.dashboard_outlined, Icons.dashboard, l10n.navDashboard),
       if (canAccess(ref, 'sales.sell'))
-        _Dest(1, Icons.qr_code_scanner, Icons.qr_code_scanner, 'Bán hàng'),
+        _Dest(1, Icons.qr_code_scanner, Icons.qr_code_scanner, l10n.navSales),
       if (canAccess(ref, 'chat.manage'))
-        _Dest(2, Icons.chat_bubble_outline, Icons.chat_bubble, 'Chat'),
+        _Dest(2, Icons.chat_bubble_outline, Icons.chat_bubble, l10n.navChat),
       if (canAccess(ref, 'orders.manage'))
-        _Dest(3, Icons.shopping_bag_outlined, Icons.shopping_bag, 'Đơn'),
-      _Dest(4, Icons.menu, Icons.menu, 'Thêm'),
+        _Dest(3, Icons.shopping_bag_outlined, Icons.shopping_bag, l10n.navOrders),
+      _Dest(4, Icons.menu, Icons.menu, l10n.navMore),
     ];
 
-    // Map branch index from go_router (fixed 5 branches) to visible nav
     final visible = destinations;
     final currentBranch = navigationShell.currentIndex;
-    int selected = 0;
+    var selected = 0;
     for (var i = 0; i < visible.length; i++) {
       if (visible[i].branch == currentBranch) {
         selected = i;
@@ -57,10 +56,6 @@ class HomeShell extends ConsumerWidget {
             ),
         ],
       ),
-      // ignore unused for analyzer
-      floatingActionButton: user == null
-          ? null
-          : null,
     );
   }
 }

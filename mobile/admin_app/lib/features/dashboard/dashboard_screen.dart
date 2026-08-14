@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/money.dart';
 import '../../core/widgets/async_body.dart';
+import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart';
 
-final dashboardProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
+final dashboardProvider =
+    FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final api = ref.watch(apiClientProvider);
   final env = await api.get('/admin/dashboard');
   return Map<String, dynamic>.from(env.data as Map? ?? {});
@@ -19,20 +21,21 @@ class DashboardScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final async = ref.watch(dashboardProvider);
     final canRevenue = auth.user?.canViewRevenue ?? false;
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tổng quan'),
+        title: Text(l10n.navDashboard),
         actions: [
           IconButton(
-            tooltip: 'Làm mới',
+            tooltip: l10n.refresh,
             onPressed: () => ref.invalidate(dashboardProvider),
             icon: const Icon(Icons.refresh),
           ),
         ],
       ),
       body: async.when(
-        loading: () => const LoadingBody(),
+        loading: () => LoadingBody(message: l10n.loading),
         error: (e, _) => ErrorBody(
           error: e,
           onRetry: () => ref.invalidate(dashboardProvider),
@@ -47,7 +50,7 @@ class DashboardScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 Text(
-                  'Xin chào, ${auth.user?.name ?? ''}',
+                  auth.user?.name ?? '',
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -63,23 +66,26 @@ class DashboardScreen extends ConsumerWidget {
                   runSpacing: 10,
                   children: [
                     _StatCard(
-                      title: 'Sản phẩm',
-                      value: '${stats['products'] ?? stats['product_count'] ?? '—'}',
+                      title: l10n.productsCount,
+                      value:
+                          '${stats['products'] ?? stats['product_count'] ?? '—'}',
                       icon: Icons.inventory_2_outlined,
                     ),
                     _StatCard(
-                      title: 'Đơn chờ',
-                      value: '${stats['orders_pending'] ?? stats['order_requests'] ?? '—'}',
+                      title: l10n.openOrders,
+                      value:
+                          '${stats['orders_pending'] ?? stats['order_requests'] ?? '—'}',
                       icon: Icons.shopping_bag_outlined,
                     ),
                     _StatCard(
-                      title: 'Chat mở',
-                      value: '${stats['open_chats'] ?? stats['chat_open'] ?? '—'}',
+                      title: l10n.navChat,
+                      value:
+                          '${stats['open_chats'] ?? stats['chat_open'] ?? '—'}',
                       icon: Icons.chat_outlined,
                     ),
                     if (canView)
                       _StatCard(
-                        title: 'Doanh thu',
+                        title: l10n.revenue,
                         value: formatMoney(
                           stats['revenue'] ??
                               stats['sales_revenue'] ??
@@ -97,28 +103,17 @@ class DashboardScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Server API',
-                            style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text('API',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         SelectableText(auth.baseUrl ?? '—'),
-                        const SizedBox(height: 8),
-                        Text(
-                          canView
-                              ? 'Bạn có quyền xem số liệu tài chính.'
-                              : 'Số liệu doanh thu ẩn theo phân quyền.',
-                          style: TextStyle(
-                              fontSize: 13, color: Colors.grey.shade700),
-                        ),
                       ],
                     ),
                   ),
                 ),
-                // Raw keys helper for varying backend payloads
                 if (stats.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text('Chỉ số khác',
-                      style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
                   ...stats.entries.take(12).map((e) {
                     if (e.key.contains('revenue') ||
                         e.key.contains('price') ||

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/async_body.dart';
+import '../../l10n/app_localizations.dart';
 
 final chatListProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -69,11 +70,12 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(chatListProvider);
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            const Text('Chat khách'),
+            Text(l10n.navChat),
             if (_badge > 0) ...[
               const SizedBox(width: 8),
               CircleAvatar(
@@ -96,15 +98,15 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
         ],
       ),
       body: async.when(
-        loading: () => const LoadingBody(),
+        loading: () => LoadingBody(message: l10n.loading),
         error: (e, _) => ErrorBody(
           error: e,
           onRetry: () => ref.invalidate(chatListProvider),
         ),
         data: (items) {
           if (items.isEmpty) {
-            return const EmptyBody(
-                message: 'Không có hội thoại mở', icon: Icons.chat_outlined);
+            return EmptyBody(
+                message: l10n.conversations, icon: Icons.chat_outlined);
           }
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(chatListProvider),

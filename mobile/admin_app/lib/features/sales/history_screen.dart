@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/async_body.dart';
+import '../../l10n/app_localizations.dart';
 
 final salesHistoryProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -39,9 +40,10 @@ class SalesHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(salesHistoryProvider);
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lịch sử bán'),
+        title: Text(l10n.navSalesHistory),
         actions: [
           IconButton(
             onPressed: () => ref.invalidate(salesHistoryProvider),

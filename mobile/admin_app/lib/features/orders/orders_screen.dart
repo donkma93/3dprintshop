@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/async_body.dart';
+import '../../l10n/app_localizations.dart';
 
 final ordersProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -27,9 +28,10 @@ class OrdersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(ordersProvider);
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Đặt hàng / liên hệ'),
+        title: Text(l10n.navOrders),
         actions: [
           IconButton(
             onPressed: () => ref.invalidate(ordersProvider),
@@ -38,12 +40,12 @@ class OrdersScreen extends ConsumerWidget {
         ],
       ),
       body: async.when(
-        loading: () => const LoadingBody(),
+        loading: () => LoadingBody(message: l10n.loading),
         error: (e, _) =>
             ErrorBody(error: e, onRetry: () => ref.invalidate(ordersProvider)),
         data: (items) {
           if (items.isEmpty) {
-            return const EmptyBody(message: 'Chưa có yêu cầu');
+            return EmptyBody(message: l10n.empty);
           }
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(ordersProvider),

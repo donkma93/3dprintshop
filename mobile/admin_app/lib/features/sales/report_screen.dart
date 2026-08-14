@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/money.dart';
 import '../../core/widgets/async_body.dart';
+import '../../l10n/app_localizations.dart';
 import '../auth/auth_controller.dart';
 
 final salesReportProvider =
@@ -17,12 +18,13 @@ class SalesReportScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final user = ref.watch(authControllerProvider).user;
     if (user == null || !user.canViewRevenue) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Báo cáo')),
-        body: const EmptyBody(
-          message: 'Bạn không có quyền xem doanh thu (revenue.view).',
+        appBar: AppBar(title: Text(l10n.report)),
+        body: EmptyBody(
+          message: l10n.noPermission,
           icon: Icons.lock_outline,
         ),
       );
@@ -31,7 +33,7 @@ class SalesReportScreen extends ConsumerWidget {
     final async = ref.watch(salesReportProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Báo cáo lãi lỗ'),
+        title: Text(l10n.navSalesReport),
         actions: [
           IconButton(
             onPressed: () => ref.invalidate(salesReportProvider),
@@ -40,7 +42,7 @@ class SalesReportScreen extends ConsumerWidget {
         ],
       ),
       body: async.when(
-        loading: () => const LoadingBody(),
+        loading: () => LoadingBody(message: l10n.loading),
         error: (e, _) => ErrorBody(
           error: e,
           onRetry: () => ref.invalidate(salesReportProvider),

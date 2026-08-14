@@ -40,19 +40,28 @@ Tài khoản seed mặc định backend:
 
 - `admin@3dshop.local` / `admin@123`
 
-## Module đã có
+## Module (khớp menu admin web)
 
-| Màn | API |
-|-----|-----|
-| Login + BASE URL | `POST /admin/login` |
-| Tổng quan | `GET /admin/dashboard` |
-| Bán QR (scan/lookup/sell) | `/admin/sales/*` |
-| Lịch sử + phiếu gửi (share/copy) | history, print |
-| Báo cáo lãi lỗ | `/admin/sales/report` |
-| Chat (poll) | `/admin/chat/*` |
-| Đơn hàng | `/admin/orders` |
-| Sản phẩm (list) | `/admin/products` |
-| Thuế HKD summary + sync | `/admin/tax/*` |
+| Nhóm | Màn | API |
+|------|-----|-----|
+| Auth | Login + BASE URL | `POST /admin/login` |
+| | Tổng quan | `GET /admin/dashboard` |
+| Kho | Sản phẩm CRUD + QR | `/admin/products`, `/qr` |
+| | Danh mục CRUD | `/admin/categories` |
+| | Nguyên liệu CRUD | `/admin/materials` |
+| | Nhập nguyên liệu | `/admin/material-inputs` |
+| | Thiết bị CRUD | `/admin/equipment` |
+| CMS | Banner / Bài viết / Trang | `/admin/banners`, `posts`, `pages` |
+| Bán hàng | Scan QR, lịch sử, phiếu gửi, P&L | `/admin/sales/*` |
+| Chat / Đơn | Chat poll, đơn liên hệ | `/admin/chat/*`, `/orders` |
+| Thuế HKD | Overview, ledger, kỳ, hồ sơ | `/admin/tax/*` |
+| Hệ thống | Users, Settings & SEO, Thùng rác | `/admin/users`, `settings`, `trash` |
+
+### Đa ngôn ngữ (i18n)
+
+- **Tiếng Việt** (mặc định) và **English**
+- Đổi ngôn ngữ: màn **Menu / Thêm** hoặc icon 🌐 trên Login
+- Lưu locale trên máy (`shared_preferences`)
 
 Thiết kế đầy đủ: [docs/mobile/THIET-KE-APP-ADMIN.md](../../docs/mobile/THIET-KE-APP-ADMIN.md)
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import '../../core/network/api_envelope.dart';
 import '../../core/providers.dart';
 import '../../core/utils/money.dart';
 import '../../core/widgets/async_body.dart';
+import '../../l10n/app_localizations.dart';
 
 class ScanSellScreen extends ConsumerStatefulWidget {
   const ScanSellScreen({super.key});
@@ -81,13 +83,14 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
   }
 
   Future<void> _sell() async {
+    final l10n = context.l10n;
     if (_product == null) {
-      showSnack(context, 'Chưa chọn sản phẩm', error: true);
+      showSnack(context, l10n.noProductSelected, error: true);
       return;
     }
     final qty = int.tryParse(_qtyCtrl.text) ?? 0;
     if (qty < 1) {
-      showSnack(context, 'Số lượng không hợp lệ', error: true);
+      showSnack(context, l10n.invalidQty, error: true);
       return;
     }
     if (_needsShipping) {
@@ -95,8 +98,7 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
           _customerPhone.text.trim().isEmpty ||
           _customerAddress.text.trim().isEmpty ||
           _customerProvince.text.trim().isEmpty) {
-        showSnack(context, 'Giao hàng cần đủ tên, SĐT, địa chỉ, tỉnh',
-            error: true);
+        showSnack(context, l10n.shippingRequired, error: true);
         return;
       }
     }
@@ -150,22 +152,22 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
       final printData = data['print'];
 
       if (!mounted) return;
-      showSnack(context, env.message.isNotEmpty ? env.message : 'Đã bán');
+      showSnack(
+          context, env.message.isNotEmpty ? env.message : l10n.sellSuccess);
 
       if (printData != null && sale != null && sale['id'] != null) {
         final id = sale['id'];
         final goPrint = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('In phiếu gửi?'),
-            content: const Text('Đơn có giao hàng. Mở dữ liệu phiếu gửi?'),
+            title: Text(l10n.printSlip),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Để sau')),
+                  child: Text(l10n.later)),
               FilledButton(
                   onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Mở phiếu')),
+                  child: Text(l10n.openPrint)),
             ],
           ),
         );
@@ -199,23 +201,38 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
     setState(() => _showScanner = false);
   }
 
+  bool get _scannerSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Quét / bán'),
+        title: Text(l10n.navSalesScan),
         actions: [
-          IconButton(
-            tooltip: _showScanner ? 'Ẩn camera' : 'Bật camera',
-            onPressed: () => setState(() => _showScanner = !_showScanner),
-            icon: Icon(_showScanner ? Icons.keyboard : Icons.qr_code_scanner),
-          ),
+          if (_scannerSupported)
+            IconButton(
+              tooltip: l10n.scanQr,
+              onPressed: () => setState(() => _showScanner = !_showScanner),
+              icon: Icon(_showScanner ? Icons.keyboard : Icons.qr_code_scanner),
+            ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (_showScanner)
+          if (!_scannerSupported)
+            Card(
+              color: Colors.amber.shade50,
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: Text(l10n.cameraUnavailable),
+              ),
+            ),
+          if (_showScanner && _scannerSupported)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: SizedBox(
@@ -223,15 +240,15 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
                 child: MobileScanner(onDetect: _onDetect),
               ),
             ),
-          if (_showScanner) const SizedBox(height: 12),
+          if (_showScanner && _scannerSupported) const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _codeCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Mã QR / SKU / payload',
-                    prefixIcon: Icon(Icons.tag),
+                  decoration: InputDecoration(
+                    labelText: l10n.enterCode,
+                    prefixIcon: const Icon(Icons.tag),
                   ),
                   onSubmitted: (_) => _lookup(),
                 ),
@@ -245,7 +262,7 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Tìm'),
+                    : Text(l10n.lookup),
               ),
             ],
           ),
@@ -256,8 +273,8 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
                 title: Text(_product!['name']?.toString() ?? '',
                     style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text(
-                  'SKU: ${_product!['sku'] ?? '—'} · Tồn: ${_product!['stock'] ?? '—'}\n'
-                  'Giá: ${formatMoney(_product!['final_price'] ?? _product!['price'])}',
+                  'SKU: ${_product!['sku'] ?? '—'} · ${l10n.stock}: ${_product!['stock'] ?? '—'}\n'
+                  '${l10n.price}: ${formatMoney(_product!['final_price'] ?? _product!['price'])}',
                 ),
                 isThreeLine: true,
               ),
@@ -269,7 +286,7 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
                   child: TextField(
                     controller: _qtyCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Số lượng'),
+                    decoration: InputDecoration(labelText: l10n.quantity),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -277,8 +294,7 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
                   child: TextField(
                     controller: _priceCtrl,
                     keyboardType: TextInputType.number,
-                    decoration:
-                        const InputDecoration(labelText: 'Đơn giá (tuỳ chọn)'),
+                    decoration: InputDecoration(labelText: l10n.unitPrice),
                   ),
                 ),
               ],
@@ -287,15 +303,15 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
             DropdownButtonFormField<String>(
               // ignore: deprecated_member_use
               value: _source,
-              decoration: const InputDecoration(labelText: 'Nguồn KH'),
+              decoration: const InputDecoration(labelText: 'Source'),
               items: const [
                 DropdownMenuItem(value: 'walk_in', child: Text('Walk-in')),
-                DropdownMenuItem(value: 'phone', child: Text('Điện thoại')),
+                DropdownMenuItem(value: 'phone', child: Text('Phone')),
                 DropdownMenuItem(value: 'web_chat', child: Text('Web chat')),
-                DropdownMenuItem(value: 'contact', child: Text('Liên hệ')),
+                DropdownMenuItem(value: 'contact', child: Text('Contact')),
                 DropdownMenuItem(
-                    value: 'order_request', child: Text('Đặt hàng web')),
-                DropdownMenuItem(value: 'other', child: Text('Khác')),
+                    value: 'order_request', child: Text('Order request')),
+                DropdownMenuItem(value: 'other', child: Text('Other')),
               ],
               onChanged: (v) => setState(() => _source = v ?? 'walk_in'),
             ),
@@ -303,57 +319,56 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
             DropdownButtonFormField<String>(
               // ignore: deprecated_member_use
               value: _payment,
-              decoration: const InputDecoration(labelText: 'Thanh toán'),
-              items: const [
-                DropdownMenuItem(value: 'cash', child: Text('Tiền mặt')),
-                DropdownMenuItem(value: 'transfer', child: Text('Chuyển khoản')),
-                DropdownMenuItem(value: 'cod', child: Text('COD')),
+              decoration: InputDecoration(labelText: l10n.paymentMethod),
+              items: [
+                DropdownMenuItem(value: 'cash', child: Text(l10n.cash)),
+                DropdownMenuItem(value: 'transfer', child: Text(l10n.transfer)),
+                const DropdownMenuItem(value: 'cod', child: Text('COD')),
               ],
               onChanged: (v) => setState(() => _payment = v ?? 'cash'),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _customerName,
-              decoration: const InputDecoration(labelText: 'Tên khách'),
+              decoration: InputDecoration(labelText: l10n.customerName),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _customerPhone,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(labelText: 'SĐT khách'),
+              decoration: InputDecoration(labelText: l10n.customerPhone),
             ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Cần giao hàng'),
+              title: Text(l10n.needsShipping),
               value: _needsShipping,
               onChanged: (v) => setState(() => _needsShipping = v),
             ),
             if (_needsShipping) ...[
               TextField(
                 controller: _customerAddress,
-                decoration:
-                    const InputDecoration(labelText: 'Địa chỉ (số nhà, đường)'),
+                decoration: InputDecoration(labelText: l10n.customerAddress),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _customerWard,
-                decoration: const InputDecoration(labelText: 'Phường/Xã'),
+                decoration: InputDecoration(labelText: l10n.ward),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _customerDistrict,
-                decoration: const InputDecoration(labelText: 'Quận/Huyện'),
+                decoration: InputDecoration(labelText: l10n.district),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _customerProvince,
-                decoration: const InputDecoration(labelText: 'Tỉnh/TP *'),
+                decoration: InputDecoration(labelText: '${l10n.province} *'),
               ),
             ],
             const SizedBox(height: 10),
             TextField(
               controller: _noteCtrl,
-              decoration: const InputDecoration(labelText: 'Ghi chú'),
+              decoration: InputDecoration(labelText: l10n.note),
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
@@ -366,11 +381,11 @@ class _ScanSellScreenState extends ConsumerState<ScanSellScreen> {
                           strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.point_of_sale),
-              label: Text(_selling ? 'Đang xử lý…' : 'Xác nhận bán'),
+              label: Text(_selling ? l10n.loading : l10n.sell),
             ),
           ] else
-            const EmptyBody(
-              message: 'Quét QR hoặc nhập mã rồi bấm Tìm',
+            EmptyBody(
+              message: l10n.enterCode,
               icon: Icons.qr_code_2,
             ),
         ],

@@ -509,15 +509,24 @@
 
 @push('styles')
 <style>
-    /* Welcome product popup — roomy modal */
+    /* Welcome product popup — always viewport-centered (portaled to body) */
     .welcome-popup {
-        position: fixed;
-        inset: 0;
-        z-index: 200;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        z-index: 10050 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         padding: 1.25rem;
+        box-sizing: border-box;
+        pointer-events: auto;
     }
     .welcome-popup[hidden] { display: none !important; }
     .welcome-popup__backdrop {
@@ -525,21 +534,26 @@
         inset: 0;
         background: rgba(15, 23, 42, .52);
         backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     .welcome-popup__panel {
         position: relative;
-        width: min(720px, 100%);
-        max-height: min(94vh, 860px);
+        z-index: 1;
+        width: min(720px, calc(100vw - 2.5rem));
+        max-height: min(90vh, 860px);
+        max-height: min(90dvh, 860px);
         overflow: auto;
+        margin: 0 auto;
         background: #fff;
         border-radius: 24px;
         border: 1px solid rgba(201, 162, 39, .3);
         box-shadow: 0 32px 80px rgba(15, 23, 42, .32);
         padding: 1.65rem 1.75rem 1.5rem;
         animation: welcomePopIn .28s ease;
+        flex-shrink: 0;
     }
     @keyframes welcomePopIn {
-        from { opacity: 0; transform: translateY(16px) scale(.97); }
+        from { opacity: 0; transform: translateY(12px) scale(.97); }
         to { opacity: 1; transform: translateY(0) scale(1); }
     }
     .welcome-popup__close {
@@ -703,10 +717,13 @@
         padding: .75rem 1.35rem !important;
         font-size: .95rem !important;
     }
-    body.welcome-popup-open { overflow: hidden; }
+    body.welcome-popup-open {
+        overflow: hidden !important;
+        touch-action: none;
+    }
     @media (min-width: 992px) {
         .welcome-popup__panel {
-            width: min(800px, 100%);
+            width: min(800px, calc(100vw - 2.5rem));
             padding: 1.85rem 2rem 1.65rem;
         }
         .welcome-popup__thumb { width: 84px; height: 84px; }
@@ -716,8 +733,8 @@
         .welcome-popup { padding: .65rem; }
         .welcome-popup__grid { grid-template-columns: 1fr; gap: .65rem; }
         .welcome-popup__panel {
-            width: 100%;
-            max-height: 92vh;
+            width: min(100%, calc(100vw - 1.3rem));
+            max-height: min(88dvh, 92vh);
             padding: 1.2rem 1rem 1.15rem;
             border-radius: 18px;
         }
@@ -896,6 +913,11 @@
     var popup = document.getElementById('welcomePopup');
     if (!popup) return;
 
+    // Detach from <main> so position:fixed always centers on the viewport
+    if (popup.parentElement !== document.body) {
+        document.body.appendChild(popup);
+    }
+
     var KEY = 'shop_welcome_popup_dismiss_at';
     var COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3 giờ
     var showTimer = null;
@@ -932,6 +954,10 @@
         // Không đè chat widget nếu đang mở
         var chat = document.getElementById('chatWidget');
         if (chat && !chat.hasAttribute('hidden')) return;
+
+        if (popup.parentElement !== document.body) {
+            document.body.appendChild(popup);
+        }
 
         lastFocus = document.activeElement;
         popup.removeAttribute('hidden');

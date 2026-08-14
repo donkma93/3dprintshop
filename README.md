@@ -15,6 +15,7 @@ Hệ thống cửa hàng in 3D + CMS admin + bán hàng QR + module **chuẩn b�
 - **Hướng dẫn đầy đủ + ảnh chụp màn hình & ảnh SP:** [docs/guide/HUONG-DAN-SU-DUNG.md](docs/guide/HUONG-DAN-SU-DUNG.md)
 - **REST API:** [docs/API.md](docs/API.md)
 - **Thiết kế app mobile admin (Android + iOS):** [docs/mobile/THIET-KE-APP-ADMIN.md](docs/mobile/THIET-KE-APP-ADMIN.md)
+- **App Flutter (source):** [mobile/admin_app/](mobile/admin_app/) — login bằng URL API + tài khoản
 
 ### Ảnh minh họa nhanh
 

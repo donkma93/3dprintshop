@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Đăng nhập quản trị — 3D Print Shop</title>
+    <title>Đăng nhập quản trị — Shop3DPrinting</title>
+    <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -18,13 +19,22 @@
             border-radius: 1.25rem;
             box-shadow: 0 25px 60px rgba(0,0,0,.25);
         }
+        .login-logo {
+            height: 112px;
+            width: auto;
+            max-width: 180px;
+            object-fit: contain;
+            margin-bottom: .85rem;
+        }
     </style>
 </head>
 <body>
 <div class="card login-card p-4 p-md-5">
     <div class="text-center mb-4">
-        <h1 class="h4 fw-bold mb-1">3D Admin</h1>
-        <p class="text-secondary mb-0">Đăng nhập trang quản trị</p>
+        <img src="{{ asset('images/logo/Shop3DPrinting.png') }}" alt="Shop3DPrinting" class="login-logo">
+        <h1 class="h4 fw-bold mb-1">Shop3DPrinting</h1>
+        <p class="text-secondary mb-0">Tận tâm - từ tấm lòng</p>
+        <p class="text-secondary small mb-0 mt-1">Đăng nhập trang quản trị</p>
     </div>
 
     <form method="POST" action="{{ route('admin.login.submit') }}">

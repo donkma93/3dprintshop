@@ -12,7 +12,7 @@ class PageController extends Controller
     {
         $settings = SiteSetting::allCached();
         $page = Page::published()->where('slug', $slug)->firstOrFail();
-        $siteName = $settings['site_name'] ?? 'Cửa hàng in 3D';
+        $siteName = $settings['site_name'] ?? 'Shop3DPrinting';
 
         $seo = [
             'title' => $page->seo_title.($page->meta_title ? '' : ' | '.$siteName),

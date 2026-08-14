@@ -38,7 +38,7 @@ class ProductController extends Controller
         $products = $query->paginate(16)->withQueryString();
         $categories = Category::where('is_active', true)->orderBy('sort_order')->orderBy('name')->get();
 
-        $siteName = $settings['site_name'] ?? 'Cửa hàng in 3D';
+        $siteName = $settings['site_name'] ?? 'Shop3DPrinting';
         $seo = [
             'title' => $activeCategory
                 ? ($activeCategory->seo_title.' | '.$siteName)
@@ -72,7 +72,7 @@ class ProductController extends Controller
             ->take(8)
             ->get();
 
-        $siteName = $settings['site_name'] ?? 'Cửa hàng in 3D';
+        $siteName = $settings['site_name'] ?? 'Shop3DPrinting';
         $seo = [
             'title' => $product->seo_title.($product->meta_title ? '' : ' | '.$siteName),
             'description' => $product->seo_description,

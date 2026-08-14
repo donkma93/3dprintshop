@@ -31,7 +31,7 @@
                                     @if($slide->button_text && $slide->link)
                                         <a href="{{ $slide->link }}" class="btn-primary-shop pulse-soft">{{ $slide->button_text }}</a>
                                     @endif
-                                    <a href="#featured-products" class="btn-ghost-hero">Xem sản phẩm nổi bật</a>
+                                    <a href="#home-products" class="btn-ghost-hero">Xem sản phẩm</a>
                                 </div>
                             </div>
                         </div>
@@ -48,7 +48,7 @@
             </button>
         @endif
     </div>
-    <a href="#product-spotlight" class="hero-scroll-hint" aria-label="Cuộn xuống xem sản phẩm">
+    <a href="#home-products" class="hero-scroll-hint" aria-label="Cuộn xuống xem sản phẩm">
         <span>Khám phá sản phẩm</span>
         <i class="bi bi-chevron-down"></i>
     </a>
@@ -62,14 +62,14 @@
                     In 3D · Thiết kế · Sáng tạo
                 </div>
                 <h1 style="font-size:clamp(1.85rem,3.6vw,2.85rem);font-weight:700;letter-spacing:-.03em;max-width:14ch;margin:0 0 .75rem">
-                    {{ $settings['site_name'] ?? 'Cửa hàng in 3D' }}
+                    {{ $settings['site_name'] ?? 'Shop3DPrinting' }}
                 </h1>
                 <p style="color:rgba(255,255,255,.75);margin:0 0 1.5rem;max-width:36ch">
-                    {{ $settings['site_tagline'] ?? 'Sản phẩm in 3D chất lượng cao' }}
+                    {{ $settings['site_tagline'] ?? 'Tận tâm - từ tấm lòng' }}
                 </p>
                 <div class="hero-actions">
                     <a href="{{ route('shop.products.index') }}" class="btn-primary-shop pulse-soft">Xem sản phẩm</a>
-                    <a href="#featured-products" class="btn-ghost-hero">Sản phẩm nổi bật</a>
+                    <a href="#home-products" class="btn-ghost-hero">Xem sản phẩm</a>
                 </div>
             </div>
         </div>
@@ -103,7 +103,7 @@
 
 {{-- Lộ sản phẩm ngay: dải ảnh ngang có thể cuộn --}}
 @if($spotlight->isNotEmpty())
-<section id="product-spotlight" class="spotlight-rail section pb-0">
+<section id="product-spotlight" class="spotlight-rail section">
     <div class="wrap">
         <div class="section-head reveal">
             <div>
@@ -136,93 +136,53 @@
 </section>
 @endif
 
-<section class="benefits-bar reveal-fade">
+<section class="benefits-bar reveal-fade" aria-label="Cam kết dịch vụ">
     <div class="wrap">
-        <div class="row g-0 stagger">
-            <div class="col-6 col-lg-3">
-                <div class="benefit">
-                    <i class="bi bi-printer"></i>
-                    <div>
-                        <strong>In 3D chuyên nghiệp</strong>
-                        <p>FDM & Resin chi tiết cao</p>
-                    </div>
+        <div class="benefits-grid stagger">
+            <article class="benefit benefit--print">
+                <span class="benefit__icon" aria-hidden="true">
+                    <i class="bi bi-printer-fill"></i>
+                </span>
+                <div class="benefit__body">
+                    <strong>In 3D chuyên nghiệp</strong>
+                    <p>FDM &amp; Resin — chi tiết sắc nét, bề mặt mịn</p>
                 </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="benefit">
-                    <i class="bi bi-box-seam"></i>
-                    <div>
-                        <strong>Nhiều vật liệu</strong>
-                        <p>PLA, PETG, ABS, Resin</p>
-                    </div>
+            </article>
+            <article class="benefit benefit--material">
+                <span class="benefit__icon" aria-hidden="true">
+                    <i class="bi bi-layers-fill"></i>
+                </span>
+                <div class="benefit__body">
+                    <strong>Nhiều vật liệu</strong>
+                    <p>PLA · PETG · ABS · Resin theo nhu cầu</p>
                 </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="benefit">
+            </article>
+            <article class="benefit benefit--ship">
+                <span class="benefit__icon" aria-hidden="true">
                     <i class="bi bi-truck"></i>
-                    <div>
-                        <strong>Giao hàng toàn quốc</strong>
-                        <p>Đóng gói cẩn thận</p>
-                    </div>
+                </span>
+                <div class="benefit__body">
+                    <strong>Giao hàng toàn quốc</strong>
+                    <p>Đóng gói chắc chắn, theo dõi đơn dễ dàng</p>
                 </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="benefit">
-                    <i class="bi bi-headset"></i>
-                    <div>
-                        <strong>Tư vấn tận tâm</strong>
-                        <p>Thiết kế theo yêu cầu</p>
-                    </div>
+            </article>
+            <article class="benefit benefit--care">
+                <span class="benefit__icon" aria-hidden="true">
+                    <i class="bi bi-chat-heart-fill"></i>
+                </span>
+                <div class="benefit__body">
+                    <strong>Tư vấn tận tâm</strong>
+                    <p>Thiết kế theo yêu cầu — chat chốt đơn nhanh</p>
                 </div>
-            </div>
+            </article>
         </div>
     </div>
 </section>
 
 <div class="wrap">
-    {{-- Intent paths: khách tự chọn lý do vào shop --}}
-    <section class="section intent-paths">
-        <div class="section-head reveal">
-            <div>
-                <h2>Bạn đang tìm gì?</h2>
-                <p class="section-sub">Chọn hướng phù hợp — vào thẳng nhóm sản phẩm cần xem</p>
-            </div>
-        </div>
-        <div class="row g-3 stagger">
-            <div class="col-6 col-lg-3">
-                <a href="{{ route('shop.products.index', ['category' => 'mo-hinh-trang-tri']) }}" class="intent-card intent-card--a">
-                    <i class="bi bi-stars"></i>
-                    <strong>Trang trí & quà tặng</strong>
-                    <span>Rồng mini, tượng, bình hoa</span>
-                </a>
-            </div>
-            <div class="col-6 col-lg-3">
-                <a href="{{ route('shop.products.index', ['category' => 'phu-kien']) }}" class="intent-card intent-card--b">
-                    <i class="bi bi-phone"></i>
-                    <strong>Phụ kiện desk</strong>
-                    <span>Giá đỡ, móc khóa, setup</span>
-                </a>
-            </div>
-            <div class="col-6 col-lg-3">
-                <a href="{{ route('shop.products.index', ['category' => 'linh-kien-ky-thuat']) }}" class="intent-card intent-card--c">
-                    <i class="bi bi-gear-wide-connected"></i>
-                    <strong>Linh kiện kỹ thuật</strong>
-                    <span>Bánh răng, prototype</span>
-                </a>
-            </div>
-            <div class="col-6 col-lg-3">
-                <a href="{{ route('shop.products.index', ['category' => 'do-choi']) }}" class="intent-card intent-card--d">
-                    <i class="bi bi-controller"></i>
-                    <strong>Đồ chơi & miniature</strong>
-                    <span>Robot, mô hình sưu tầm</span>
-                </a>
-            </div>
-        </div>
-    </section>
-
     @if($promos->isNotEmpty())
-    <section class="section pb-0 pt-0">
-        <div class="row g-3 stagger">
+    <section class="section section--promos">
+        <div class="row g-2 g-md-3 stagger">
             @foreach($promos as $promo)
                 <div class="col-md-4">
                     <a href="{{ $promo->link ?: route('shop.products.index') }}" class="promo-tile">
@@ -235,66 +195,110 @@
     </section>
     @endif
 
-    @if($categories->isNotEmpty())
-    <section class="section">
-        <div class="section-head reveal">
-            <h2>Danh mục</h2>
-            <a href="{{ route('shop.products.index') }}">Xem tất cả</a>
-        </div>
-        <div class="row g-2 g-md-3 justify-content-center stagger">
-            @foreach($categories as $category)
-                <div class="col-4 col-md-3 col-lg-2">
-                    <a href="{{ route('shop.products.index', ['category' => $category->slug]) }}" class="cat-pill">
-                        <div class="avatar">
-                            <img src="{{ $category->image_url }}" alt="{{ $category->name }}" loading="lazy">
-                        </div>
-                        <div class="label">{{ $category->name }}</div>
-                        <div class="meta">{{ $category->products_count }} SP</div>
-                    </a>
-                </div>
-            @endforeach
-        </div>
-    </section>
-    @endif
+    @php
+        $productTabs = collect([
+            [
+                'id' => 'sale',
+                'label' => 'Đang giảm giá',
+                'icon' => 'bi-lightning-charge-fill',
+                'sub' => 'Giá ưu đãi có hạn — đặt sớm để shop giữ mẫu',
+                'items' => $onSale ?? collect(),
+                'badge' => null,
+                'col' => 'col-6 col-md-4 col-lg-3',
+                'anchor' => 'sale-products',
+            ],
+            [
+                'id' => 'featured',
+                'label' => 'Nổi bật',
+                'icon' => 'bi-stars',
+                'sub' => 'Những mẫu được chọn kỹ — dễ bắt mắt ngay lần đầu',
+                'items' => $featured ?? collect(),
+                'badge' => 'Hot',
+                'col' => 'col-6 col-md-4 col-lg-3',
+                'anchor' => 'featured-products',
+            ],
+            [
+                'id' => 'affordable',
+                'label' => 'Giá dễ thử',
+                'icon' => 'bi-tag-fill',
+                'sub' => 'Bắt đầu từ mẫu nhỏ — xem chất lượng in trước khi đặt lớn',
+                'items' => $affordable ?? collect(),
+                'badge' => 'Dễ thử',
+                'col' => 'col-6 col-md-4 col-lg-3',
+                'anchor' => null,
+            ],
+            [
+                'id' => 'latest',
+                'label' => 'Sản phẩm mới',
+                'icon' => 'bi-clock-history',
+                'sub' => 'Cập nhật gần đây từ xưởng',
+                'items' => $latest ?? collect(),
+                'badge' => 'Mới',
+                'col' => 'col-6 col-md-4 col-lg-3',
+                'anchor' => null,
+            ],
+        ])->filter(fn ($tab) => $tab['items']->isNotEmpty())->values();
+        $activeProductTab = $productTabs->first();
+    @endphp
 
-    @if(isset($onSale) && $onSale->isNotEmpty())
-    <section id="sale-products" class="section section-products {{ $categories->isNotEmpty() ? 'pt-0' : '' }}">
-        <div class="surface-soft surface-soft--softgold">
-            <div class="section-head">
+    @if($productTabs->isNotEmpty())
+    <section id="home-products" class="section section-products">
+        <div class="surface-soft product-tabs" id="productTabs" data-product-tabs>
+            <div class="section-head product-tabs__head">
                 <div>
-                    <h2>Đang giảm giá</h2>
-                    <p class="section-sub">Giá ưu đãi có hạn — đặt sớm để shop giữ mẫu</p>
+                    <h2>Sản phẩm</h2>
+                    <p class="section-sub" id="productTabsSub">{{ $activeProductTab['sub'] }}</p>
                 </div>
                 <a href="{{ route('shop.products.index') }}">Xem catalog</a>
             </div>
-            <div class="row g-3 g-lg-4 stagger">
-                @foreach($onSale as $product)
-                    <div class="col-6 col-md-4 col-lg-3">
-                        @include('shop.partials.product-card', ['product' => $product])
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
 
-    @if($featured->isNotEmpty())
-    <section id="featured-products" class="section section-products {{ (isset($onSale) && $onSale->isNotEmpty()) || $categories->isNotEmpty() ? 'pt-0' : '' }}">
-        <div class="surface-soft">
-            <div class="section-head">
-                <div>
-                    <h2>Sản phẩm nổi bật</h2>
-                    <p class="section-sub">Những mẫu được chọn kỹ — dễ bắt mắt ngay lần đầu</p>
-                </div>
-                <a href="{{ route('shop.products.index') }}">Xem tất cả</a>
+            <div class="product-tabs__nav" role="tablist" aria-label="Nhóm sản phẩm">
+                @foreach($productTabs as $i => $tab)
+                    <button
+                        type="button"
+                        class="product-tabs__btn {{ $i === 0 ? 'is-active' : '' }}"
+                        role="tab"
+                        id="product-tab-{{ $tab['id'] }}"
+                        aria-selected="{{ $i === 0 ? 'true' : 'false' }}"
+                        aria-controls="product-panel-{{ $tab['id'] }}"
+                        data-tab="{{ $tab['id'] }}"
+                        data-sub="{{ $tab['sub'] }}"
+                        @if($tab['anchor']) data-anchors="{{ $tab['anchor'] }}" @endif
+                    >
+                        <i class="bi {{ $tab['icon'] }}" aria-hidden="true"></i>
+                        <span class="product-tabs__btn-label">{{ $tab['label'] }}</span>
+                        <span class="product-tabs__count">{{ $tab['items']->count() }}</span>
+                    </button>
+                @endforeach
             </div>
-            <div class="row g-3 g-lg-4 stagger">
-                @foreach($featured as $product)
-                    <div class="col-6 col-md-4 col-lg-3">
-                        @include('shop.partials.product-card', ['product' => $product, 'badge' => $product->is_on_sale ? null : 'Hot'])
+
+            <div class="product-tabs__panels">
+                @foreach($productTabs as $i => $tab)
+                    <div
+                        class="product-tabs__panel {{ $i === 0 ? 'is-active' : '' }}"
+                        role="tabpanel"
+                        id="product-panel-{{ $tab['id'] }}"
+                        aria-labelledby="product-tab-{{ $tab['id'] }}"
+                        @if($tab['anchor']) data-panel-anchor="{{ $tab['anchor'] }}" @endif
+                        @if($i !== 0) hidden @endif
+                    >
+                        <div class="row g-3 g-lg-4 stagger">
+                            @foreach($tab['items'] as $product)
+                                <div class="{{ $tab['col'] }}">
+                                    @php
+                                        $cardBadge = $tab['badge'];
+                                        if ($tab['id'] === 'featured' && $product->is_on_sale) {
+                                            $cardBadge = null;
+                                        }
+                                    @endphp
+                                    @include('shop.partials.product-card', ['product' => $product, 'badge' => $cardBadge])
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 @endforeach
             </div>
+
             <div class="section-cta">
                 <a href="{{ route('shop.products.index') }}" class="btn-primary-shop">Xem toàn bộ sản phẩm</a>
             </div>
@@ -302,50 +306,8 @@
     </section>
     @endif
 
-    @if($affordable->isNotEmpty())
-    <section class="section section-products pt-0">
-        <div class="surface-soft surface-soft--softgold">
-            <div class="section-head">
-                <div>
-                    <h2>Giá dễ thử</h2>
-                    <p class="section-sub">Bắt đầu từ mẫu nhỏ — xem chất lượng in trước khi đặt lớn</p>
-                </div>
-                <a href="{{ route('shop.products.index') }}">Xem thêm</a>
-            </div>
-            <div class="row g-3 g-lg-4 stagger">
-                @foreach($affordable as $product)
-                    <div class="col-6 col-md-4 col-lg-4">
-                        @include('shop.partials.product-card', ['product' => $product, 'badge' => 'Dễ thử'])
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
-
-    @if($latest->isNotEmpty())
-    <section class="section section-products pt-0">
-        <div class="surface-soft">
-            <div class="section-head">
-                <div>
-                    <h2>Sản phẩm mới</h2>
-                    <p class="section-sub">Cập nhật gần đây từ xưởng</p>
-                </div>
-                <a href="{{ route('shop.products.index') }}">Xem tất cả</a>
-            </div>
-            <div class="row g-3 g-lg-4 stagger">
-                @foreach($latest as $product)
-                    <div class="col-6 col-md-4 col-lg-3">
-                        @include('shop.partials.product-card', ['product' => $product, 'badge' => 'Mới'])
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
-
     {{-- Đặt hàng / để lại thông tin liên hệ --}}
-    <section id="order-form" class="section pt-0">
+    <section id="order-form" class="section">
         <div class="order-lead-home reveal">
             <div class="row g-4 align-items-start">
                 <div class="col-lg-5">
@@ -416,7 +378,7 @@
     </section>
 
     {{-- CTA giữa trang --}}
-    <section class="section pt-0">
+    <section class="section">
         <div class="engage-cta reveal-zoom">
             <div class="engage-cta__text">
                 <h2>Chưa biết chọn mẫu nào?</h2>
@@ -432,7 +394,7 @@
     </section>
 
     @if(!empty($settings['home_about_content']))
-    <section class="section pt-0">
+    <section class="section">
         <div class="showcase-band">
             <div class="gold-line"></div>
             <h2>{{ $settings['home_about_title'] ?? 'Giới thiệu' }}</h2>
@@ -445,7 +407,7 @@
     @endif
 
     @if($posts->isNotEmpty())
-    <section class="section section-news pt-0 pb-5">
+    <section class="section section-news">
         <div class="surface-soft">
             <div class="section-head">
                 <div>
@@ -487,4 +449,533 @@
         <i class="bi bi-arrow-up"></i>
     </button>
 </div>
+
+@php
+    // Gợi ý popup: ưu tiên sale → nổi bật → mới, unique theo id, tối đa 4
+    $welcomePool = collect()
+        ->merge($onSale ?? [])
+        ->merge($featured ?? [])
+        ->merge($latest ?? [])
+        ->unique('id')
+        ->take(4)
+        ->values();
+@endphp
+
+{{-- Popup gợi ý sản phẩm: lần đầu / sau 3 giờ (localStorage) --}}
+@if($welcomePool->isNotEmpty())
+<div class="welcome-popup" id="welcomePopup" hidden role="dialog" aria-modal="true" aria-labelledby="welcomePopupTitle" aria-describedby="welcomePopupSub">
+    <div class="welcome-popup__backdrop" id="welcomePopupBackdrop" data-welcome-dismiss></div>
+    <div class="welcome-popup__panel">
+        <button type="button" class="welcome-popup__close" id="welcomePopupClose" aria-label="Đóng" data-welcome-dismiss>
+            <i class="bi bi-x-lg"></i>
+        </button>
+        <div class="welcome-popup__head">
+            <span class="welcome-popup__badge"><i class="bi bi-compass" aria-hidden="true"></i> Cùng thăm quan web</span>
+            <h2 id="welcomePopupTitle">Gợi ý sản phẩm cho bạn</h2>
+            <p id="welcomePopupSub">Chọn nhóm / mẫu yêu thích — shop sẵn sàng tư vấn và chốt đơn khi bạn cần.</p>
+        </div>
+        <div class="welcome-popup__grid">
+            @foreach($welcomePool as $product)
+                <a href="{{ route('shop.products.show', $product->slug) }}" class="welcome-popup__card">
+                    <span class="welcome-popup__thumb">
+                        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" loading="lazy" width="96" height="96">
+                    </span>
+                    <span class="welcome-popup__meta">
+                        <strong>{{ $product->name }}</strong>
+                        <em>
+                            @if($product->is_on_sale)
+                                <span class="welcome-popup__old">{{ number_format($product->price, 0, ',', '.') }}</span>
+                            @endif
+                            {{ number_format($product->final_price, 0, ',', '.') }} đ
+                        </em>
+                    </span>
+                </a>
+            @endforeach
+        </div>
+        <div class="welcome-popup__paths">
+            <a href="{{ route('shop.products.index', ['category' => 'mo-hinh-trang-tri']) }}" class="welcome-popup__chip"><i class="bi bi-stars"></i> Trang trí</a>
+            <a href="{{ route('shop.products.index', ['category' => 'phu-kien']) }}" class="welcome-popup__chip"><i class="bi bi-phone"></i> Phụ kiện</a>
+            <a href="{{ route('shop.products.index', ['category' => 'linh-kien-ky-thuat']) }}" class="welcome-popup__chip"><i class="bi bi-gear-wide-connected"></i> Kỹ thuật</a>
+            <a href="{{ route('shop.products.index', ['category' => 'do-choi']) }}" class="welcome-popup__chip"><i class="bi bi-controller"></i> Đồ chơi</a>
+        </div>
+        <div class="welcome-popup__actions">
+            <button type="button" class="welcome-popup__later" data-welcome-dismiss>Để sau</button>
+            <a href="#home-products" class="btn-primary-shop welcome-popup__cta" id="welcomePopupCta">Xem sản phẩm</a>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
+
+@push('styles')
+<style>
+    /* Welcome product popup — roomy modal */
+    .welcome-popup {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+    }
+    .welcome-popup[hidden] { display: none !important; }
+    .welcome-popup__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, .52);
+        backdrop-filter: blur(5px);
+    }
+    .welcome-popup__panel {
+        position: relative;
+        width: min(720px, 100%);
+        max-height: min(94vh, 860px);
+        overflow: auto;
+        background: #fff;
+        border-radius: 24px;
+        border: 1px solid rgba(201, 162, 39, .3);
+        box-shadow: 0 32px 80px rgba(15, 23, 42, .32);
+        padding: 1.65rem 1.75rem 1.5rem;
+        animation: welcomePopIn .28s ease;
+    }
+    @keyframes welcomePopIn {
+        from { opacity: 0; transform: translateY(16px) scale(.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .welcome-popup__close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 1.05rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .welcome-popup__close:hover { background: #e2e8f0; color: #0f172a; }
+    .welcome-popup__head { padding-right: 2.5rem; margin-bottom: 1.15rem; }
+    .welcome-popup__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #8a6b14;
+        background: rgba(201, 162, 39, .14);
+        border-radius: 999px;
+        padding: .35rem .75rem;
+        margin-bottom: .65rem;
+    }
+    .welcome-popup__head h2 {
+        margin: 0 0 .45rem;
+        font-size: clamp(1.35rem, 2.4vw, 1.65rem);
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -.02em;
+    }
+    .welcome-popup__head p {
+        margin: 0;
+        font-size: .95rem;
+        color: #64748b;
+        line-height: 1.5;
+        max-width: 42ch;
+    }
+    .welcome-popup__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: .85rem;
+        margin-bottom: 1.1rem;
+    }
+    .welcome-popup__card {
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+        padding: .75rem;
+        border-radius: 14px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+        min-height: 88px;
+    }
+    .welcome-popup__card:hover {
+        border-color: rgba(201, 162, 39, .55);
+        box-shadow: 0 10px 22px rgba(120, 90, 20, .12);
+        transform: translateY(-2px);
+        color: inherit;
+    }
+    .welcome-popup__thumb {
+        width: 76px;
+        height: 76px;
+        border-radius: 12px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: #e2e8f0;
+    }
+    .welcome-popup__thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .welcome-popup__meta {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
+    }
+    .welcome-popup__meta strong {
+        font-size: .95rem;
+        font-weight: 700;
+        line-height: 1.3;
+        color: #0f172a;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .welcome-popup__meta em {
+        font-style: normal;
+        font-size: .92rem;
+        font-weight: 800;
+        color: #a8841a;
+    }
+    .welcome-popup__old {
+        text-decoration: line-through;
+        opacity: .55;
+        font-weight: 600;
+        margin-right: .3rem;
+        color: #94a3b8;
+        font-size: .85rem;
+    }
+    .welcome-popup__paths {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-bottom: 1.25rem;
+    }
+    .welcome-popup__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: .5rem .85rem;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid rgba(201, 162, 39, .28);
+        color: #475569;
+        font-size: .84rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .welcome-popup__chip:hover {
+        background: rgba(201, 162, 39, .1);
+        color: #0f172a;
+        border-color: rgba(201, 162, 39, .5);
+    }
+    .welcome-popup__actions {
+        display: flex;
+        gap: .7rem;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    .welcome-popup__later {
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #64748b;
+        border-radius: 999px;
+        padding: .7rem 1.2rem;
+        font-size: .92rem;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .welcome-popup__later:hover { background: #f8fafc; color: #0f172a; }
+    .welcome-popup__cta {
+        text-decoration: none;
+        padding: .75rem 1.35rem !important;
+        font-size: .95rem !important;
+    }
+    body.welcome-popup-open { overflow: hidden; }
+    @media (min-width: 992px) {
+        .welcome-popup__panel {
+            width: min(800px, 100%);
+            padding: 1.85rem 2rem 1.65rem;
+        }
+        .welcome-popup__thumb { width: 84px; height: 84px; }
+        .welcome-popup__card { min-height: 100px; padding: .85rem; }
+    }
+    @media (max-width: 575.98px) {
+        .welcome-popup { padding: .65rem; }
+        .welcome-popup__grid { grid-template-columns: 1fr; gap: .65rem; }
+        .welcome-popup__panel {
+            width: 100%;
+            max-height: 92vh;
+            padding: 1.2rem 1rem 1.15rem;
+            border-radius: 18px;
+        }
+        .welcome-popup__thumb { width: 68px; height: 68px; }
+        .welcome-popup__actions { flex-direction: column-reverse; align-items: stretch; }
+        .welcome-popup__cta { text-align: center; }
+    }
+
+    .product-tabs__head { margin-bottom: .75rem; }
+    .product-tabs__nav {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: .5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: .15rem 0 .85rem;
+        margin: 0 0 .35rem;
+        border-bottom: 1px solid rgba(201, 162, 39, .18);
+    }
+    .product-tabs__nav::-webkit-scrollbar { display: none; }
+    .product-tabs__btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        flex: 0 0 auto;
+        border: 1px solid rgba(201, 162, 39, .22);
+        background: #fff;
+        color: #475569;
+        border-radius: 999px;
+        padding: .55rem .9rem;
+        font-size: .84rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .15s ease;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .product-tabs__btn i { font-size: 1rem; opacity: .9; }
+    .product-tabs__btn:hover {
+        border-color: rgba(201, 162, 39, .45);
+        color: #0f172a;
+        transform: translateY(-1px);
+    }
+    .product-tabs__btn.is-active {
+        background: linear-gradient(160deg, #f0d878, #c9a227 55%, #a8841a);
+        border-color: transparent;
+        color: #1a1408;
+        box-shadow: 0 8px 18px rgba(120, 90, 20, .22);
+    }
+    .product-tabs__count {
+        min-width: 1.35rem;
+        height: 1.35rem;
+        padding: 0 .35rem;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, .08);
+        font-size: .72rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .product-tabs__btn.is-active .product-tabs__count {
+        background: rgba(26, 20, 8, .14);
+        color: #1a1408;
+    }
+    .product-tabs__panel[hidden] { display: none !important; }
+    .product-tabs__panel.is-active {
+        animation: productTabIn .28s ease;
+    }
+    @keyframes productTabIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 575.98px) {
+        .product-tabs__btn {
+            padding: .5rem .7rem;
+            font-size: .78rem;
+            gap: .3rem;
+        }
+        .product-tabs__btn-label { max-width: 9.5ch; overflow: hidden; text-overflow: ellipsis; }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+(function () {
+    var root = document.querySelector('[data-product-tabs]');
+    if (!root) return;
+
+    var nav = root.querySelector('.product-tabs__nav');
+    var buttons = Array.prototype.slice.call(root.querySelectorAll('.product-tabs__btn'));
+    var panels = Array.prototype.slice.call(root.querySelectorAll('.product-tabs__panel'));
+    var subEl = document.getElementById('productTabsSub');
+
+    function activate(tabId, opts) {
+        opts = opts || {};
+        var btn = buttons.find(function (b) { return b.getAttribute('data-tab') === tabId; });
+        var panel = panels.find(function (p) { return p.id === 'product-panel-' + tabId; });
+        if (!btn || !panel) return;
+
+        buttons.forEach(function (b) {
+            var on = b === btn;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-selected', on ? 'true' : 'false');
+            b.tabIndex = on ? 0 : -1;
+        });
+        panels.forEach(function (p) {
+            var on = p === panel;
+            p.classList.toggle('is-active', on);
+            if (on) p.removeAttribute('hidden');
+            else p.setAttribute('hidden', 'hidden');
+        });
+        if (subEl) {
+            subEl.textContent = btn.getAttribute('data-sub') || '';
+        }
+        if (opts.scrollIntoView) {
+            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (btn && typeof btn.scrollIntoView === 'function') {
+            btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+    }
+
+    buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activate(btn.getAttribute('data-tab'));
+        });
+        btn.addEventListener('keydown', function (e) {
+            var idx = buttons.indexOf(btn);
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                var next = buttons[(idx + 1) % buttons.length];
+                next.focus();
+                activate(next.getAttribute('data-tab'));
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                var prev = buttons[(idx - 1 + buttons.length) % buttons.length];
+                prev.focus();
+                activate(prev.getAttribute('data-tab'));
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                buttons[0].focus();
+                activate(buttons[0].getAttribute('data-tab'));
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                buttons[buttons.length - 1].focus();
+                activate(buttons[buttons.length - 1].getAttribute('data-tab'));
+            }
+        });
+    });
+
+    // Deep-link: #sale-products / #featured-products / #home-products
+    function fromHash() {
+        var hash = (location.hash || '').replace(/^#/, '');
+        if (!hash) return;
+        if (hash === 'home-products') {
+            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+        var byAnchor = buttons.find(function (b) {
+            var a = (b.getAttribute('data-anchors') || '').split(',').map(function (s) { return s.trim(); });
+            return a.indexOf(hash) !== -1;
+        });
+        if (byAnchor) {
+            activate(byAnchor.getAttribute('data-tab'), { scrollIntoView: true });
+        }
+    }
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+})();
+
+/* Welcome product popup — first visit / every 3 hours (same spirit as chat proactive) */
+(function () {
+    var popup = document.getElementById('welcomePopup');
+    if (!popup) return;
+
+    var KEY = 'shop_welcome_popup_dismiss_at';
+    var COOLDOWN_MS = 3 * 60 * 60 * 1000; // 3 giờ
+    var showTimer = null;
+    var lastFocus = null;
+
+    function isDismissed() {
+        try {
+            var until = Number(localStorage.getItem(KEY) || 0) || 0;
+            return until > Date.now();
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function dismiss(hours) {
+        hide();
+        try {
+            var until = Date.now() + (Number(hours) || 3) * 3600 * 1000;
+            localStorage.setItem(KEY, String(until));
+        } catch (e) {}
+    }
+
+    function hide() {
+        popup.setAttribute('hidden', 'hidden');
+        document.body.classList.remove('welcome-popup-open');
+        if (lastFocus && typeof lastFocus.focus === 'function') {
+            try { lastFocus.focus(); } catch (e) {}
+        }
+        document.removeEventListener('keydown', onKey);
+    }
+
+    function show() {
+        if (isDismissed()) return;
+        // Không đè chat widget nếu đang mở
+        var chat = document.getElementById('chatWidget');
+        if (chat && !chat.hasAttribute('hidden')) return;
+
+        lastFocus = document.activeElement;
+        popup.removeAttribute('hidden');
+        document.body.classList.add('welcome-popup-open');
+        var closeBtn = document.getElementById('welcomePopupClose');
+        if (closeBtn) closeBtn.focus();
+        document.addEventListener('keydown', onKey);
+    }
+
+    function onKey(e) {
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            dismiss(3);
+        }
+    }
+
+    popup.querySelectorAll('[data-welcome-dismiss]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            dismiss(3);
+        });
+    });
+
+    var cta = document.getElementById('welcomePopupCta');
+    cta?.addEventListener('click', function () {
+        dismiss(3);
+    });
+
+    // Click product / chip: still remember dismiss so reopening page soon won't re-spam
+    popup.querySelectorAll('.welcome-popup__card, .welcome-popup__chip').forEach(function (el) {
+        el.addEventListener('click', function () {
+            try {
+                localStorage.setItem(KEY, String(Date.now() + COOLDOWN_MS));
+            } catch (e) {}
+        });
+    });
+
+    // Hiện sau 1.2s khi vào trang (chỉ homepage có popup này)
+    if (!isDismissed()) {
+        showTimer = setTimeout(show, 1200);
+    }
+
+    window.addEventListener('beforeunload', function () {
+        if (showTimer) clearTimeout(showTimer);
+    });
+})();
+</script>
+@endpush

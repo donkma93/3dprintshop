@@ -258,7 +258,7 @@ class SliderAndPostsSeeder extends Seeder
                     'excerpt' => $item['excerpt'],
                     'content' => $item['content'],
                     'image' => $image,
-                    'meta_title' => $item['title'].' | 3D Print Shop',
+                    'meta_title' => $item['title'].' | Shop3DPrinting',
                     'meta_description' => $item['excerpt'],
                     'meta_keywords' => 'mô hình in 3D, in 3D, 3D print',
                     'is_published' => true,

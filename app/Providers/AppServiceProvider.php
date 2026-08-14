@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Category;
 use App\Models\Page;
 use App\Models\SiteSetting;
+use App\Models\SocialVideo;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -25,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
             $settings = [];
             $menuPages = collect();
             $menuCategories = collect();
+            $socialVideos = collect();
 
             try {
                 if (Schema::hasTable('site_settings')) {
@@ -42,11 +44,14 @@ class AppServiceProvider extends ServiceProvider
                         ->orderBy('name')
                         ->get(['id', 'name', 'slug']);
                 }
+                if (Schema::hasTable('social_videos')) {
+                    $socialVideos = SocialVideo::forHome()->take(10)->get();
+                }
             } catch (\Throwable $e) {
                 // DB not ready during install
             }
 
-            $view->with(compact('settings', 'menuPages', 'menuCategories'));
+            $view->with(compact('settings', 'menuPages', 'menuCategories', 'socialVideos'));
         });
     }
 }

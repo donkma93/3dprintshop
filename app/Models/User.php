@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Support\Permission;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -82,6 +83,11 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return Permission::roleLabel($this->role);
+    }
+
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
     }
 
     /**

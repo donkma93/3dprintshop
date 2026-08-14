@@ -88,7 +88,7 @@ class HomeController extends Controller
         ];
 
         $seo = [
-            'title' => $settings['meta_title'] ?? ($settings['site_name'] ?? 'Cửa hàng in 3D'),
+            'title' => $settings['meta_title'] ?? ($settings['site_name'] ?? 'Shop3DPrinting'),
             'description' => $settings['meta_description'] ?? ($settings['site_tagline'] ?? ''),
             'keywords' => $settings['meta_keywords'] ?? '',
             'canonical' => route('shop.home'),

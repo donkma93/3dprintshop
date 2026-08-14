@@ -31,4 +31,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+    | Firebase Cloud Messaging (HTTP v1) — push chat admin app.
+    | FCM_CREDENTIALS: absolute path to service account JSON from Firebase Console.
+    */
+    'fcm' => [
+        'project_id' => env('FCM_PROJECT_ID'),
+        'credentials' => env('FCM_CREDENTIALS'),
+    ],
+
 ];

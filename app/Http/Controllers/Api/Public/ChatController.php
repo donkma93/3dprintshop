@@ -7,6 +7,7 @@ use App\Http\Resources\ChatConversationResource;
 use App\Http\Resources\ChatMessageResource;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Services\FcmPushService;
 use App\Support\ChatIdleCloser;
 use App\Support\ChatProductShare;
 use Illuminate\Http\JsonResponse;
@@ -89,8 +90,10 @@ class ChatController extends ApiController
             'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
-        if (empty($data['guest_phone']) && empty($data['guest_email'])) {
-            return $this->fail('Vui lòng để lại số điện thoại hoặc email để chúng tôi liên hệ lại.', 422);
+        // Chỉ bắt buộc tên để xưng hô; SĐT/email là tuỳ chọn.
+        $guestName = trim((string) $data['guest_name']);
+        if ($guestName === '') {
+            return $this->fail('Vui lòng nhập tên để shop tiện xưng hô.', 422);
         }
 
         [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
@@ -99,7 +102,7 @@ class ChatController extends ApiController
 
         $conversation = ChatConversation::create([
             'guest_token' => ChatConversation::newGuestToken(),
-            'guest_name' => $data['guest_name'],
+            'guest_name' => $guestName,
             'guest_phone' => $data['guest_phone'] ?? null,
             'guest_email' => $data['guest_email'] ?? null,
             'status' => 'open',
@@ -109,10 +112,11 @@ class ChatController extends ApiController
             'ip_address' => $request->ip(),
         ]);
 
+        $siteName = \App\Models\SiteSetting::getValue('site_name', 'Shop3DPrinting');
         $welcome = "Xin chào {$conversation->guest_name}! 👋\n"
-            ."Mình là trợ lý ảo của cửa hàng in 3D.\n"
-            ."Bạn có thể gửi câu hỏi về sản phẩm, báo giá hoặc thời gian in.\n"
-            .'Nhân viên sẽ phản hồi sớm nhất (thường trong giờ hành chính).';
+            ."Mình là trợ lý ảo của {$siteName}.\n"
+            ."Bạn hỏi gì về sản phẩm, báo giá hay thời gian in cũng được.\n"
+            .'Nhân viên sẽ phản hồi sớm nhất có thể.';
 
         ChatMessage::create([
             'conversation_id' => $conversation->id,
@@ -123,10 +127,10 @@ class ChatController extends ApiController
         $guestBody = trim((string) ($data['message'] ?? ''));
         if ($guestBody === '') {
             $guestBody = $productSnapshot['message_template']
-                ?? 'Khách vừa bắt đầu chat và để lại thông tin liên hệ.';
+                ?? 'Khách vừa bắt đầu chat.';
         }
 
-        ChatMessage::create([
+        $guestMessage = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'guest',
             'body' => $guestBody,
@@ -136,6 +140,8 @@ class ChatController extends ApiController
 
         $conversation->last_message_at = now();
         $conversation->save();
+
+        app(FcmPushService::class)->notifyGuestChatMessage($guestMessage);
 
         $messages = $conversation->messages()->with(['admin:id,name', 'product'])->orderBy('id')->get();
 
@@ -201,6 +207,8 @@ class ChatController extends ApiController
         $conversation->last_message_at = now();
         $conversation->guest_last_read_at = now();
         $conversation->save();
+
+        app(FcmPushService::class)->notifyGuestChatMessage($message);
 
         $guestCount = $conversation->messages()->where('sender', 'guest')->count();
         if ($guestCount <= 2) {
@@ -300,7 +308,7 @@ class ChatController extends ApiController
         }
         if (preg_match('/thời gian|bao lâu|giao hàng|lead/u', $t)) {
             return "Thời gian in trung bình 1–3 ngày tùy độ phức tạp và số lượng.\n"
-                .'Đơn gấp vui lòng để lại SĐT, shop sẽ ưu tiên phản hồi.';
+                .'Đơn gấp cứ nhắn thêm chi tiết — shop sẽ ưu tiên phản hồi.';
         }
         if (preg_match('/vật liệu|pla|petg|resin|abs/u', $t)) {
             return "Shop hỗ trợ PLA, PETG, ABS và Resin.\n"

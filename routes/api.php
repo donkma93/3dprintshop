@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\AuthController as ApiAdminAuthController;
 use App\Http\Controllers\Api\Admin\BannerController as ApiAdminBannerController;
+use App\Http\Controllers\Api\Admin\DeviceTokenController as ApiAdminDeviceTokenController;
 use App\Http\Controllers\Api\Admin\CategoryController as ApiAdminCategoryController;
 use App\Http\Controllers\Api\Admin\ChatController as ApiAdminChatController;
 use App\Http\Controllers\Api\Admin\DashboardController as ApiAdminDashboardController;
@@ -82,6 +83,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/me', [ApiAdminAuthController::class, 'me']);
             Route::post('/logout', [ApiAdminAuthController::class, 'logout']);
             Route::post('/logout-all', [ApiAdminAuthController::class, 'logoutAll']);
+
+            // FCM device tokens (push khi app đóng)
+            Route::post('/device-tokens', [ApiAdminDeviceTokenController::class, 'store']);
+            Route::delete('/device-tokens', [ApiAdminDeviceTokenController::class, 'destroy']);
 
             Route::get('/dashboard', [ApiAdminDashboardController::class, 'index']);
 

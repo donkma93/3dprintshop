@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') — Admin 3D Shop</title>
+    <title>@yield('title', 'Dashboard') — Shop3DPrinting Admin</title>
+    <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
@@ -26,10 +27,29 @@
         .sidebar .brand {
             font-weight: 800;
             color: #fff;
-            padding: 1.25rem 1.25rem .5rem;
-            font-size: 1.15rem;
+            padding: 1.1rem 1.25rem .35rem;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+        }
+        .sidebar .brand img {
+            height: 56px;
+            width: auto;
+            object-fit: contain;
+            width: 36px;
+            object-fit: contain;
+            border-radius: .5rem;
+            background: rgba(255,255,255,.06);
+            flex-shrink: 0;
         }
         .sidebar .brand span { color: var(--accent); }
+        .sidebar .brand-sub {
+            padding: 0 1.25rem .75rem 3.7rem;
+            font-size: .72rem;
+            color: #94a3b8;
+            line-height: 1.3;
+        }
         .sidebar .nav-link {
             color: #94a3b8;
             border-radius: .65rem;
@@ -233,8 +253,11 @@
 </head>
 <body>
 <aside class="sidebar" id="sidebar">
-    <div class="brand">3D<span>Admin</span></div>
-    <div class="px-3 pb-2 small text-secondary">Quản lý bán hàng in 3D</div>
+    <div class="brand">
+        <img src="{{ asset('images/logo/Shop3DPrinting.png') }}" alt="Shop3DPrinting">
+        <span>Shop3DPrinting</span>
+    </div>
+    <div class="brand-sub">Tận tâm - từ tấm lòng</div>
     @php($authUser = auth()->user())
     <nav class="nav flex-column py-2">
         @if($authUser?->hasPermission('dashboard.view'))
@@ -268,13 +291,18 @@
         </a>
         @endif
 
-        @if($authUser?->hasPermission('banners.manage') || $authUser?->hasPermission('posts.manage') || $authUser?->hasPermission('pages.manage'))
+        @if($authUser?->hasPermission('banners.manage') || $authUser?->hasPermission('videos.manage') || $authUser?->hasPermission('posts.manage') || $authUser?->hasPermission('pages.manage'))
         <hr class="border-secondary mx-3 opacity-25">
         <div class="px-3 small text-secondary text-uppercase mb-1">Nội dung website</div>
         @endif
         @if($authUser?->hasPermission('banners.manage'))
         <a class="nav-link {{ request()->routeIs('admin.banners.*') ? 'active' : '' }}" href="{{ route('admin.banners.index') }}">
             <i class="bi bi-images"></i> Banner / Slider
+        </a>
+        @endif
+        @if($authUser?->hasPermission('videos.manage'))
+        <a class="nav-link {{ request()->routeIs('admin.videos.*') ? 'active' : '' }}" href="{{ route('admin.videos.index') }}">
+            <i class="bi bi-play-btn"></i> Video MXH
         </a>
         @endif
         @if($authUser?->hasPermission('posts.manage'))

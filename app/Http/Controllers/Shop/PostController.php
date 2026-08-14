@@ -12,7 +12,7 @@ class PostController extends Controller
     {
         $settings = SiteSetting::allCached();
         $posts = Post::published()->latest('published_at')->paginate(9);
-        $siteName = $settings['site_name'] ?? 'Cửa hàng in 3D';
+        $siteName = $settings['site_name'] ?? 'Shop3DPrinting';
 
         $seo = [
             'title' => 'Tin tức & bài viết | '.$siteName,
@@ -30,7 +30,7 @@ class PostController extends Controller
         $settings = SiteSetting::allCached();
         $post = Post::published()->where('slug', $slug)->firstOrFail();
         $related = Post::published()->where('id', '!=', $post->id)->latest('published_at')->take(4)->get();
-        $siteName = $settings['site_name'] ?? 'Cửa hàng in 3D';
+        $siteName = $settings['site_name'] ?? 'Shop3DPrinting';
 
         $seo = [
             'title' => $post->seo_title.($post->meta_title ? '' : ' | '.$siteName),

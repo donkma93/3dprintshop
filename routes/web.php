@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\SocialVideoController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ChatController as AdminChatController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -58,6 +59,7 @@ Route::post('/dat-hang', [ShopOrderRequestController::class, 'store'])
 Route::prefix('chat')->name('shop.chat.')->group(function () {
     Route::get('/', [ShopChatController::class, 'show'])->name('show');
     Route::get('/products', [ShopChatController::class, 'products'])->name('products');
+    Route::get('/proactive', [ShopChatController::class, 'proactive'])->name('proactive');
     Route::post('/start', [ShopChatController::class, 'start'])->name('start');
     Route::post('/send', [ShopChatController::class, 'send'])->name('send');
     Route::post('/typing', [ShopChatController::class, 'typing'])->name('typing');
@@ -114,6 +116,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::resource('banners', BannerController::class)->except(['show']);
+        Route::post('videos/preview', [SocialVideoController::class, 'preview'])->name('videos.preview');
+        Route::resource('videos', SocialVideoController::class)->except(['show']);
         Route::resource('posts', AdminPostController::class)->except(['show']);
         Route::resource('pages', AdminPageController::class)->except(['show']);
         Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');

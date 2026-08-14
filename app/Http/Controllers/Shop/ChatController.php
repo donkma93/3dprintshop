@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\Product;
+use App\Services\FcmPushService;
 use App\Support\ChatIdleCloser;
 use App\Support\ChatProductShare;
 use Illuminate\Http\JsonResponse;
@@ -138,6 +139,49 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Proactive chat invite for storefront:
+     * show prompt when this IP has not chatted today, or last chat was > 3 hours ago.
+     */
+    public function proactive(Request $request): JsonResponse
+    {
+        $key = 'chat-proactive:'.$request->ip();
+        if (RateLimiter::tooManyAttempts($key, 30)) {
+            return response()->json(['should_prompt' => false], 429);
+        }
+        RateLimiter::hit($key, 60);
+
+        $token = trim((string) $request->query('token', ''));
+        if ($token !== '') {
+            $active = ChatConversation::query()
+                ->where('guest_token', $token)
+                ->where('status', 'open')
+                ->first();
+            if ($active) {
+                ChatIdleCloser::closeIfIdle($active);
+                $active->refresh();
+                if ($active->status === 'open') {
+                    return response()->json([
+                        'should_prompt' => false,
+                        'reason' => 'active_session',
+                        'has_open_conversation' => true,
+                    ]);
+                }
+            }
+        }
+
+        $decision = $this->proactiveDecisionForIp((string) $request->ip());
+
+        return response()->json([
+            'should_prompt' => $decision['should_prompt'],
+            'reason' => $decision['reason'],
+            'has_open_conversation' => $decision['has_open_conversation'],
+            'last_chat_at' => $decision['last_chat_at'],
+            'site_name' => \App\Models\SiteSetting::getValue('site_name', 'Shop3DPrinting'),
+            'greeting' => 'Xin chào! Shop sẵn sàng hỗ trợ bạn. Chỉ cần để lại tên để bắt đầu chat.',
+        ]);
+    }
+
     public function start(Request $request): JsonResponse
     {
         $key = 'chat-start:'.$request->ip();
@@ -154,10 +198,10 @@ class ChatController extends Controller
             'product_id' => ['nullable', 'integer', 'exists:products,id'],
         ]);
 
-        if (empty($data['guest_phone']) && empty($data['guest_email'])) {
-            return response()->json([
-                'message' => 'Vui lòng để lại số điện thoại hoặc email để chúng tôi liên hệ lại.',
-            ], 422);
+        // Chỉ bắt buộc tên để xưng hô; SĐT/email là tuỳ chọn.
+        $guestName = trim((string) $data['guest_name']);
+        if ($guestName === '') {
+            return response()->json(['message' => 'Vui lòng nhập tên để shop tiện xưng hô.'], 422);
         }
 
         [$productId, $productSnapshot] = ChatProductShare::resolveFromRequest(
@@ -166,7 +210,7 @@ class ChatController extends Controller
 
         $conversation = ChatConversation::create([
             'guest_token' => ChatConversation::newGuestToken(),
-            'guest_name' => $data['guest_name'],
+            'guest_name' => $guestName,
             'guest_phone' => $data['guest_phone'] ?? null,
             'guest_email' => $data['guest_email'] ?? null,
             'status' => 'open',
@@ -176,10 +220,11 @@ class ChatController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
+        $siteName = \App\Models\SiteSetting::getValue('site_name', 'Shop3DPrinting');
         $welcome = "Xin chào {$conversation->guest_name}! 👋\n"
-            ."Mình là trợ lý ảo của cửa hàng in 3D.\n"
-            ."Bạn có thể gửi câu hỏi về sản phẩm, báo giá hoặc thời gian in.\n"
-            .'Nhân viên sẽ phản hồi sớm nhất (thường trong giờ hành chính).';
+            ."Mình là trợ lý ảo của {$siteName}.\n"
+            ."Bạn hỏi gì về sản phẩm, báo giá hay thời gian in cũng được.\n"
+            .'Nhân viên sẽ phản hồi sớm nhất có thể.';
 
         ChatMessage::create([
             'conversation_id' => $conversation->id,
@@ -190,11 +235,11 @@ class ChatController extends Controller
         $guestBody = trim((string) ($data['message'] ?? ''));
         if ($guestBody === '') {
             $guestBody = $productSnapshot['message_template']
-                ?? 'Khách vừa bắt đầu chat và để lại thông tin liên hệ.';
+                ?? 'Khách vừa bắt đầu chat.';
         }
 
         // Luôn có tin guest để admin nhận notification (kể cả chỉ để lại SĐT)
-        ChatMessage::create([
+        $guestMessage = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender' => 'guest',
             'body' => $guestBody,
@@ -204,6 +249,8 @@ class ChatController extends Controller
 
         $conversation->last_message_at = now();
         $conversation->save();
+
+        app(FcmPushService::class)->notifyGuestChatMessage($guestMessage);
 
         $messages = $conversation->messages()->with(['admin:id,name', 'product'])->orderBy('id')->get()
             ->map(fn (ChatMessage $m) => $this->formatMessage($m));
@@ -274,6 +321,8 @@ class ChatController extends Controller
         $conversation->last_message_at = now();
         $conversation->guest_last_read_at = now();
         $conversation->save();
+
+        app(FcmPushService::class)->notifyGuestChatMessage($message);
 
         $guestCount = $conversation->messages()->where('sender', 'guest')->count();
         if ($guestCount <= 2) {
@@ -378,7 +427,7 @@ class ChatController extends Controller
         }
         if (preg_match('/thời gian|bao lâu|giao hàng|lead/u', $t)) {
             return "Thời gian in trung bình 1–3 ngày tùy độ phức tạp và số lượng.\n"
-                .'Đơn gấp vui lòng để lại SĐT, shop sẽ ưu tiên phản hồi.';
+                .'Đơn gấp cứ nhắn thêm chi tiết — shop sẽ ưu tiên phản hồi.';
         }
         if (preg_match('/vật liệu|pla|petg|resin|abs/u', $t)) {
             return "Shop hỗ trợ PLA, PETG, ABS và Resin.\n"
@@ -388,6 +437,73 @@ class ChatController extends Controller
 
         return "Cảm ơn bạn đã nhắn tin! Tin nhắn đã chuyển tới nhân viên tư vấn.\n"
             .'Bạn có thể tiếp tục hỏi — hoặc gọi hotline nếu cần gấp.';
+    }
+
+    /**
+     * @return array{should_prompt: bool, reason: string|null, has_open_conversation: bool, last_chat_at: string|null}
+     */
+    private function proactiveDecisionForIp(string $ip): array
+    {
+        if ($ip === '') {
+            return [
+                'should_prompt' => true,
+                'reason' => 'unknown_ip',
+                'has_open_conversation' => false,
+                'last_chat_at' => null,
+            ];
+        }
+
+        $openRecent = ChatConversation::query()
+            ->where('ip_address', $ip)
+            ->where('status', 'open')
+            ->where('last_message_at', '>=', now()->subHours(3))
+            ->exists();
+
+        $last = ChatConversation::query()
+            ->where('ip_address', $ip)
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $last) {
+            return [
+                'should_prompt' => true,
+                'reason' => 'new_ip',
+                'has_open_conversation' => false,
+                'last_chat_at' => null,
+            ];
+        }
+
+        $lastAt = $last->last_message_at ?? $last->created_at;
+        $lastIso = optional($lastAt)->toIso8601String();
+
+        // IP đã chat trong 3 giờ gần nhất → không mời lại.
+        if ($lastAt && $lastAt->gte(now()->subHours(3))) {
+            return [
+                'should_prompt' => false,
+                'reason' => 'recent_chat',
+                'has_open_conversation' => $openRecent || $last->status === 'open',
+                'last_chat_at' => $lastIso,
+            ];
+        }
+
+        // Chưa chat trong ngày (theo last_message_at) → mời (IP "mới" trong ngày).
+        if (! $lastAt || $lastAt->lt(now()->startOfDay())) {
+            return [
+                'should_prompt' => true,
+                'reason' => 'new_today',
+                'has_open_conversation' => false,
+                'last_chat_at' => $lastIso,
+            ];
+        }
+
+        // Đã chat hôm nay nhưng đã quá 3 giờ → mời lại.
+        return [
+            'should_prompt' => true,
+            'reason' => 'idle_3h',
+            'has_open_conversation' => false,
+            'last_chat_at' => $lastIso,
+        ];
     }
 
     private function formatConversation(ChatConversation $c): array

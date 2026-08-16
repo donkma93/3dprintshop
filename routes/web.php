@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\OrderRequestController as AdminOrderRequestContro
 use App\Http\Controllers\Shop\ChatController as ShopChatController;
 use App\Http\Controllers\Shop\HomeController;
 use App\Http\Controllers\Shop\OrderRequestController as ShopOrderRequestController;
+use App\Http\Controllers\Shop\OnlineVisitorController;
 use App\Http\Controllers\Shop\PageController as ShopPageController;
 use App\Http\Controllers\Shop\PostController as ShopPostController;
 use App\Http\Controllers\Shop\ProductController as ShopProductController;
@@ -50,6 +51,9 @@ Route::get('/trang/{slug}', [ShopPageController::class, 'show'])->name('shop.pag
 Route::post('/dat-hang', [ShopOrderRequestController::class, 'store'])
     ->middleware('throttle:12,1')
     ->name('shop.orders.store');
+Route::post('/online/heartbeat', [OnlineVisitorController::class, 'heartbeat'])
+    ->middleware('throttle:120,1')
+    ->name('shop.online.heartbeat');
 
 /*
 |--------------------------------------------------------------------------

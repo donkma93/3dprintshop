@@ -3100,6 +3100,22 @@
             color: var(--text-3);
             text-align: center;
         }
+        .online-counter {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            margin-left: .75rem;
+        }
+        .online-counter__dot {
+            width: .55rem;
+            height: .55rem;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, .14);
+        }
+        @media (max-width: 575.98px) {
+            .online-counter { display: flex; justify-content: center; margin: .5rem 0 0; }
+        }
 
         /* benefits-bar chrome handled with card grid styles above */
         .section-products .surface-soft,
@@ -3733,6 +3749,10 @@
         </div>
         <div class="footer-bottom">
             {{ $settings['footer_copyright'] ?? ('© '.date('Y').' '.$siteName) }}
+            <span class="online-counter" aria-live="polite">
+                <span class="online-counter__dot" aria-hidden="true"></span>
+                <span>Đang online: <strong id="onlineVisitorCount">—</strong></span>
+            </span>
         </div>
     </div>
 </footer>
@@ -3833,6 +3853,41 @@ document.getElementById('menuBtn')?.addEventListener('click', function () {
 @include('shop.partials.contact-chat')
 @include('partials.toastr')
 @stack('scripts')
+<script>
+(function () {
+    var countEl = document.getElementById('onlineVisitorCount');
+    if (!countEl) return;
+    var key = 'shop_online_visitor_token';
+    var token = null;
+    try { token = localStorage.getItem(key); } catch (e) {}
+    if (!token) {
+        token = window.crypto && typeof window.crypto.randomUUID === 'function'
+            ? window.crypto.randomUUID()
+            : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+            });
+        try { localStorage.setItem(key, token); } catch (e) {}
+    }
+    function heartbeat() {
+        fetch(@json(route('shop.online.heartbeat')), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ visitor_token: token }),
+            credentials: 'same-origin'
+        }).then(function (response) { return response.ok ? response.json() : null; })
+          .then(function (data) {
+              if (data && typeof data.online !== 'undefined') countEl.textContent = data.online;
+          }).catch(function () {});
+    }
+    heartbeat();
+    window.setInterval(heartbeat, 45000);
+})();
+</script>
 <script>
 (function () {
     /* Floating live video strip — horizontal + expand/collapse */

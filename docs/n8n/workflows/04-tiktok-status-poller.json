@@ -1,0 +1,95 @@
+{
+  "name": "3D Shop - 04 TikTok Status Poller",
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "minutes", "minutesInterval": 2}]}},
+      "id": "bb94650b-603e-4383-b722-2eca4986e8c2",
+      "name": "Every 2 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-720, 0]
+    },
+    {
+      "parameters": {
+        "url": "https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {"parameters": [{"name": "status", "value": "publishing"}, {"name": "limit", "value": "25"}]},
+        "options": {}
+      },
+      "id": "16965edf-6119-4264-aafa-8cd8da60f0ed",
+      "name": "Get Publishing Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-480, 0],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    },
+    {
+      "parameters": {"fieldToSplitOut": "data", "options": {}},
+      "id": "a43bdc0e-d5b6-432b-8c0e-ad67b2406565",
+      "name": "One Job Per Item",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [-240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/status/fetch/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { publish_id: $json.publishing.tiktok.publish_id } }}",
+        "options": {"response": {"response": {"neverError": true}}}
+      },
+      "id": "90cc5b74-ad17-4bee-9717-aa76da6b968f",
+      "name": "TikTok Fetch Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 0],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_TIKTOK_HEADER_AUTH_ID", "name": "TikTok Access Token"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const job = $('One Job Per Item').item.json;\nconst state = $json.data?.status || $json.error?.code || 'UNKNOWN';\nif (!['PUBLISH_COMPLETE','FAILED'].includes(state)) return [];\nconst failed = state === 'FAILED';\nreturn [{json: {job_key: job.job_key, status: failed ? 'partially_published' : 'published', tiktok_status: failed ? 'failed' : 'published', error: failed ? ($json.data?.fail_reason || $json.error?.message || 'TikTok publish failed') : null}}];"
+      },
+      "id": "ea52688e-c5d7-43dd-a5fd-aa24b727b707",
+      "name": "Only Terminal Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, 0]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs/{{ $json.job_key }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: $json.status, publishing: { tiktok: { status: $json.tiktok_status } }, last_error: $json.error } }}",
+        "options": {}
+      },
+      "id": "13266ec5-4864-4029-a219-eed68092829d",
+      "name": "Finalize Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 0],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    }
+  ],
+  "connections": {
+    "Every 2 Minutes": {"main": [[{"node": "Get Publishing Jobs", "type": "main", "index": 0}]]},
+    "Get Publishing Jobs": {"main": [[{"node": "One Job Per Item", "type": "main", "index": 0}]]},
+    "One Job Per Item": {"main": [[{"node": "TikTok Fetch Status", "type": "main", "index": 0}]]},
+    "TikTok Fetch Status": {"main": [[{"node": "Only Terminal Status", "type": "main", "index": 0}]]},
+    "Only Terminal Status": {"main": [[{"node": "Finalize Job", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "timezone": "Asia/Bangkok"},
+  "active": false,
+  "versionId": "a7ce74a2-5459-48cc-8db4-e32d79ac094a",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

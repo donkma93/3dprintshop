@@ -1,0 +1,239 @@
+{
+  "name": "3D Shop - 01 Drive + Gemini Generate",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Cấu hình trước khi bật\n1. Chọn Google Drive credential và thư mục PRODUCT-INBOX.\n2. Chọn Header Auth `Shop Automation API` cho các node gọi website.\n3. Chọn Header Auth `Gemini API Key` cho các node Gemini.\n4. Tên ảnh: `SKU__mo-ta.jpg`.\n5. Chọn thư mục GENERATED-IMAGES ở node upload."
+      },
+      "id": "1f5a2954-93e6-4b98-9a90-fd1e9a8b1010",
+      "name": "README",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1040, -400]
+    },
+    {
+      "parameters": {
+        "pollTimes": {"item": [{"mode": "everyMinute"}]},
+        "authentication": "oAuth2",
+        "triggerOn": "specificFolder",
+        "folderToWatch": {"__rl": true, "value": "REPLACE_PRODUCT_INBOX_FOLDER_ID", "mode": "id"},
+        "event": "fileCreated",
+        "options": {"fileType": "all"}
+      },
+      "id": "51a4a1f5-e4cd-4fe7-b2a7-f5d3c1a1168d",
+      "name": "Google Drive - New File",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [-1000, 0],
+      "credentials": {"googleDriveOAuth2Api": {"id": "REPLACE_GOOGLE_CREDENTIAL_ID", "name": "Google Drive account"}}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": false, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [{"id": "is-image", "leftValue": "={{ $json.mimeType }}", "rightValue": "image/", "operator": {"type": "string", "operation": "startsWith"}}],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7b8a3e99-d16e-453f-b66d-268c6706db46",
+      "name": "Only Images",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-760, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs/intake",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { source_driver: 'google_drive', source_file_id: $json.id, source_file_name: $json.name, source_mime_type: $json.mimeType, source_url: $json.webViewLink || null } }}",
+        "options": {"response": {"response": {"neverError": true}}}
+      },
+      "id": "ee6c1bb0-96de-45f5-a0e9-bbf2334f296a",
+      "name": "Create Content Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-520, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {"id": "not-duplicate", "leftValue": "={{ $json.data.duplicate }}", "rightValue": false, "operator": {"type": "boolean", "operation": "false", "singleValue": true}},
+            {"id": "validated", "leftValue": "={{ $json.data.job.status }}", "rightValue": "validated", "operator": {"type": "string", "operation": "equals"}}
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "88a80a7e-3fc3-4bda-969a-b09bed30d342",
+      "name": "New Valid Job",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-280, -80]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {"__rl": true, "value": "={{ $('Google Drive - New File').item.json.id }}", "mode": "id"},
+        "options": {"binaryPropertyName": "data"}
+      },
+      "id": "994a5fca-ac09-4d5d-b4fc-247b81a79242",
+      "name": "Download Original",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-40, -80],
+      "credentials": {"googleDriveOAuth2Api": {"id": "REPLACE_GOOGLE_CREDENTIAL_ID", "name": "Google Drive account"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { contents: [{ role: 'user', parts: [{ text: `Bạn là copywriter tiếng Việt cho Shop3DPrinting. Chỉ dùng dữ kiện sản phẩm trong JSON sau, không tự bịa giá, kích thước, chất liệu hoặc tồn kho. Tạo nội dung bán hàng tự nhiên, không hứa hẹn quá mức. PRODUCT=${JSON.stringify($('Create Content Job').item.json.data.job.product_snapshot)}. Trả JSON gồm facebook.caption, facebook.hashtags, facebook.cta, tiktok.caption, tiktok.hashtags, tiktok.hook, creative.image_prompt, creative.video_prompt, missing_facts.` }, { inlineData: { mimeType: $('Google Drive - New File').item.json.mimeType, data: $binary.data.data } }] }], generationConfig: { responseMimeType: 'application/json', responseSchema: { type: 'OBJECT', properties: { facebook: { type: 'OBJECT', properties: { caption: { type: 'STRING' }, hashtags: { type: 'ARRAY', items: { type: 'STRING' } }, cta: { type: 'STRING' } }, required: ['caption','hashtags','cta'] }, tiktok: { type: 'OBJECT', properties: { caption: { type: 'STRING' }, hashtags: { type: 'ARRAY', items: { type: 'STRING' } }, hook: { type: 'STRING' } }, required: ['caption','hashtags','hook'] }, creative: { type: 'OBJECT', properties: { image_prompt: { type: 'STRING' }, video_prompt: { type: 'STRING' } }, required: ['image_prompt','video_prompt'] }, missing_facts: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['facebook','tiktok','creative','missing_facts'] } } } }}",
+        "options": {"timeout": 180000}
+      },
+      "id": "0877c2c4-ff9e-4a99-8b95-11a613246be3",
+      "name": "Gemini - Content JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_GEMINI_HEADER_AUTH_ID", "name": "Gemini API Key"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';\nconst cleaned = raw.replace(/^```json\\s*/i, '').replace(/```$/i, '').trim();\nif (!cleaned) throw new Error('Gemini không trả nội dung JSON');\nconst content = JSON.parse(cleaned);\nreturn [{ json: { job_key: $('Create Content Job').item.json.data.job.job_key, content } }];"
+      },
+      "id": "a0be0132-4107-4307-b976-057e19b32be3",
+      "name": "Parse Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, -80]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs/{{ $json.job_key }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'generating_media', generated_content: $json.content } }}",
+        "options": {}
+      },
+      "id": "2aee2111-2783-4668-bc1e-76086284d9c4",
+      "name": "Save Generated Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/interactions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: 'gemini-3.1-flash-image', input: [{ type: 'text', text: `${$('Parse Content').item.json.content.creative.image_prompt}. Preserve the exact product geometry, colors, number of parts and proportions. Do not add text, logos, accessories, watermarks or alter the product design. Professional social-commerce photograph.` }, { type: 'image', mime_type: $('Google Drive - New File').item.json.mimeType, data: $('Download Original').item.binary.data.data }], response_format: { type: 'image', mime_type: 'image/png', aspect_ratio: '4:5', image_size: '2K' } } }}",
+        "options": {"timeout": 300000}
+      },
+      "id": "d171e371-0c1d-414a-a6f0-9bab9513efe5",
+      "name": "Gemini - Facebook Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_GEMINI_HEADER_AUTH_ID", "name": "Gemini API Key"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const base64 = $json.output_image?.data || $json.steps?.flatMap(s => s.content || []).find(c => c.type === 'image')?.data;\nif (!base64) throw new Error('Không tìm thấy ảnh trong phản hồi Gemini');\nconst jobKey = $('Parse Content').item.json.job_key;\nreturn [{ json: { job_key: jobKey }, binary: { data: { data: base64, mimeType: 'image/png', fileName: `${jobKey}-facebook.png` } } }];"
+      },
+      "id": "3be2814f-5976-4707-bb9d-5977c5246b21",
+      "name": "Image Base64 to Binary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1160, -80]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $binary.data.fileName }}",
+        "driveId": {"__rl": true, "mode": "list", "value": "My Drive"},
+        "folderId": {"__rl": true, "value": "REPLACE_GENERATED_IMAGES_FOLDER_ID", "mode": "id"},
+        "options": {}
+      },
+      "id": "0605b433-47a1-497c-a557-c1133816f7d6",
+      "name": "Upload Facebook Image",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [1400, -80],
+      "credentials": {"googleDriveOAuth2Api": {"id": "REPLACE_GOOGLE_CREDENTIAL_ID", "name": "Google Drive account"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { instances: [{ prompt: `${$('Parse Content').item.json.content.creative.video_prompt}. Vertical product video. Preserve exact product geometry and colors. No text, logo or watermark.`, image: { inlineData: { mimeType: $('Google Drive - New File').item.json.mimeType, data: $('Download Original').item.binary.data.data } } }], parameters: { aspectRatio: '9:16', resolution: '720p', numberOfVideos: 1 } } }}",
+        "options": {"timeout": 180000}
+      },
+      "id": "f6b524c6-2aa2-47c0-bc6b-a460e56f11fc",
+      "name": "Gemini - Submit Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_GEMINI_HEADER_AUTH_ID", "name": "Gemini API Key"}}
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs/{{ $('Parse Content').item.json.job_key }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'waiting_video', media: { facebook_image: { drive_file_id: $('Upload Facebook Image').item.json.id, file_name: $('Upload Facebook Image').item.json.name }, video: { operation_name: $json.name, model: 'veo-3.1-generate-preview' } } } }}",
+        "options": {}
+      },
+      "id": "e7fd2629-1f7e-40d7-bc21-311998d673aa",
+      "name": "Save Media Job",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1880, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    }
+  ],
+  "connections": {
+    "Google Drive - New File": {"main": [[{"node": "Only Images", "type": "main", "index": 0}]]},
+    "Only Images": {"main": [[{"node": "Create Content Job", "type": "main", "index": 0}], []]},
+    "Create Content Job": {"main": [[{"node": "New Valid Job", "type": "main", "index": 0}]]},
+    "New Valid Job": {"main": [[{"node": "Download Original", "type": "main", "index": 0}], []]},
+    "Download Original": {"main": [[{"node": "Gemini - Content JSON", "type": "main", "index": 0}]]},
+    "Gemini - Content JSON": {"main": [[{"node": "Parse Content", "type": "main", "index": 0}]]},
+    "Parse Content": {"main": [[{"node": "Save Generated Content", "type": "main", "index": 0}]]},
+    "Save Generated Content": {"main": [[{"node": "Gemini - Facebook Image", "type": "main", "index": 0}]]},
+    "Gemini - Facebook Image": {"main": [[{"node": "Image Base64 to Binary", "type": "main", "index": 0}]]},
+    "Image Base64 to Binary": {"main": [[{"node": "Upload Facebook Image", "type": "main", "index": 0}]]},
+    "Upload Facebook Image": {"main": [[{"node": "Gemini - Submit Video", "type": "main", "index": 0}]]},
+    "Gemini - Submit Video": {"main": [[{"node": "Save Media Job", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveManualExecutions": true, "timezone": "Asia/Bangkok"},
+  "active": false,
+  "versionId": "fb612f18-10c4-4ef1-a7b9-2f6bad379541",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

@@ -1,0 +1,255 @@
+{
+  "name": "3D Shop - 03 Approve + Facebook + TikTok",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Duyệt và đăng\nPOST vào webhook với `{ job_key, decision: approved|rejected, note }`.\n\nMuốn full-auto: enable 4 node `AUTO - ...` đang bị disable.\n\nTikTok mặc định `SELF_ONLY`. Chỉ đổi thành `PUBLIC_TO_EVERYONE` sau khi app được audit và giá trị này có trong creator_info. Video mẫu 8 giây thường đủ nhỏ để upload một chunk; nếu video >64 MB phải bổ sung chunking."
+      },
+      "id": "6470ff4a-ddc3-4ae9-8218-07d852d952b0",
+      "name": "README",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1040, -420]
+    },
+    {
+      "parameters": {"rule": {"interval": [{"field": "minutes", "minutesInterval": 1}]}},
+      "id": "43b1caed-d019-41ee-8f68-720499386056",
+      "name": "AUTO - Every Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-1000, 220],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {"parameters": [{"name": "status", "value": "waiting_approval"}, {"name": "limit", "value": "5"}]},
+        "options": {}
+      },
+      "id": "51acdd4d-4c7f-49df-a65d-93f4c2fa1722",
+      "name": "AUTO - Get Ready Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-760, 220],
+      "disabled": true,
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    },
+    {
+      "parameters": {"fieldToSplitOut": "data", "options": {}},
+      "id": "30df303c-1e90-485b-b35f-5dcbf16d44ed",
+      "name": "AUTO - One Job",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [-520, 220],
+      "disabled": true
+    },
+    {
+      "parameters": {"jsCode": "return [{json: {job_key: $json.job_key, decision: 'approved', note: 'AUTO_APPROVED_BY_N8N'}}];"},
+      "id": "78855f46-1338-448a-98ab-1392fe046fbf",
+      "name": "AUTO - Approve",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-280, 220],
+      "disabled": true
+    },
+    {
+      "parameters": {"httpMethod": "POST", "path": "3dshop-social-approval", "authentication": "headerAuth", "responseMode": "onReceived", "options": {}},
+      "id": "b87f7637-238e-4307-88a2-26c754a7eb8a",
+      "name": "Approval Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-1000, 0],
+      "webhookId": "320103cc-b60c-46b4-9b88-e833f2b18787",
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_APPROVAL_HEADER_AUTH_ID", "name": "Approval Webhook Auth"}}
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nif (!body.job_key) throw new Error('Thiếu job_key');\nif (!['approved','rejected'].includes(body.decision)) throw new Error('decision phải là approved hoặc rejected');\nreturn [{json: {job_key: body.job_key, decision: body.decision, note: body.note || null}}];"
+      },
+      "id": "49c7dd18-8d31-4711-aa10-24c28a3af8be",
+      "name": "Validate Decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-760, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs/{{ $json.job_key }}/approval",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { decision: $json.decision, note: $json.note } }}",
+        "options": {}
+      },
+      "id": "9980d14d-2669-41d2-bb4f-35f232d5545e",
+      "name": "Save Approval",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-520, 0],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [{"id": "approved", "leftValue": "={{ $json.data.approval_status }}", "rightValue": "approved", "operator": {"type": "string", "operation": "equals"}}],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e9cd64ee-3579-4af8-be8d-d07755464630",
+      "name": "Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-280, 0]
+    },
+    {
+      "parameters": {"operation": "download", "fileId": {"__rl": true, "value": "={{ $json.data.media.facebook_image.drive_file_id }}", "mode": "id"}, "options": {"binaryPropertyName": "data"}},
+      "id": "d45e572c-0b9a-40b4-8338-4a80bf79a117",
+      "name": "Download Facebook Image",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [-40, -80],
+      "credentials": {"googleDriveOAuth2Api": {"id": "REPLACE_GOOGLE_CREDENTIAL_ID", "name": "Google Drive account"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/REPLACE_GRAPH_API_VERSION/REPLACE_FACEBOOK_PAGE_ID/photos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {"parameters": [
+          {"name": "message", "value": "={{ [$('Save Approval').item.json.data.generated_content.facebook.caption, $('Save Approval').item.json.data.generated_content.facebook.cta, ...$('Save Approval').item.json.data.generated_content.facebook.hashtags].filter(Boolean).join('\\n\\n') }}"},
+          {"parameterType": "formBinaryData", "name": "source", "inputDataFieldName": "data"}
+        ]},
+        "options": {"timeout": 180000}
+      },
+      "id": "8494f4a2-0c55-4d47-b040-cd8506320733",
+      "name": "Publish Facebook Photo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_META_HEADER_AUTH_ID", "name": "Meta Page Access Token"}}
+    },
+    {
+      "parameters": {"operation": "download", "fileId": {"__rl": true, "value": "={{ $('Save Approval').item.json.data.media.video.drive_file_id }}", "mode": "id"}, "options": {"binaryPropertyName": "data"}},
+      "id": "1b5bb462-e046-42a3-a9a2-b86f6729760b",
+      "name": "Download TikTok Video",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [440, -80],
+      "credentials": {"googleDriveOAuth2Api": {"id": "REPLACE_GOOGLE_CREDENTIAL_ID", "name": "Google Drive account"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/creator_info/query/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {}
+      },
+      "id": "f516632c-0495-456e-9650-6108b04f0ddc",
+      "name": "TikTok Creator Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_TIKTOK_HEADER_AUTH_ID", "name": "TikTok Access Token"}}
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/video/init/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { post_info: { title: [$('Save Approval').item.json.data.generated_content.tiktok.caption, ...$('Save Approval').item.json.data.generated_content.tiktok.hashtags].filter(Boolean).join(' '), privacy_level: 'SELF_ONLY', disable_comment: false, duet_disabled: false, stitch_disabled: false, brand_organic_toggle: true, is_aigc: true }, source_info: { source: 'FILE_UPLOAD', video_size: Number($('Save Approval').item.json.data.media.video.size), chunk_size: Number($('Save Approval').item.json.data.media.video.size), total_chunk_count: 1 } } }}",
+        "options": {}
+      },
+      "id": "c75e913c-6da7-4924-8c14-03181438ecf2",
+      "name": "TikTok Init Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_TIKTOK_HEADER_AUTH_ID", "name": "TikTok Access Token"}}
+    },
+    {
+      "parameters": {"mode": "combine", "combineBy": "combineByPosition", "options": {}},
+      "id": "d7080348-32a2-46f2-8bbd-7942056b378c",
+      "name": "Attach Video Binary",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1160, -80]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('TikTok Init Upload').item.json.data.upload_url }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [
+          {"name": "Content-Type", "value": "video/mp4"},
+          {"name": "Content-Range", "value": "=bytes 0-{{ Number($('Save Approval').item.json.data.media.video.size) - 1 }}/{{ Number($('Save Approval').item.json.data.media.video.size) }}"}
+        ]},
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {"timeout": 300000, "response": {"response": {"neverError": true}}}
+      },
+      "id": "17988245-2bd0-4b41-9950-54f2d2a46357",
+      "name": "Upload Video to TikTok",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1400, -80]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://REPLACE_SHOP_DOMAIN/api/v1/automation/social-jobs/{{ $('Save Approval').item.json.data.job_key }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { status: 'publishing', publishing: { facebook: { status: 'published', post_id: $('Publish Facebook Photo').item.json.id }, tiktok: { status: 'processing', publish_id: $('TikTok Init Upload').item.json.data.publish_id, privacy_level: 'SELF_ONLY', is_aigc: true } } } }}",
+        "options": {}
+      },
+      "id": "40a5db74-c4d6-475b-beaa-c54b829cd4e4",
+      "name": "Save Publishing IDs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1640, -80],
+      "credentials": {"httpHeaderAuth": {"id": "REPLACE_SHOP_HEADER_AUTH_ID", "name": "Shop Automation API"}}
+    }
+  ],
+  "connections": {
+    "AUTO - Every Minute": {"main": [[{"node": "AUTO - Get Ready Jobs", "type": "main", "index": 0}]]},
+    "AUTO - Get Ready Jobs": {"main": [[{"node": "AUTO - One Job", "type": "main", "index": 0}]]},
+    "AUTO - One Job": {"main": [[{"node": "AUTO - Approve", "type": "main", "index": 0}]]},
+    "AUTO - Approve": {"main": [[{"node": "Save Approval", "type": "main", "index": 0}]]},
+    "Approval Webhook": {"main": [[{"node": "Validate Decision", "type": "main", "index": 0}]]},
+    "Validate Decision": {"main": [[{"node": "Save Approval", "type": "main", "index": 0}]]},
+    "Save Approval": {"main": [[{"node": "Approved?", "type": "main", "index": 0}]]},
+    "Approved?": {"main": [[{"node": "Download Facebook Image", "type": "main", "index": 0}], []]},
+    "Download Facebook Image": {"main": [[{"node": "Publish Facebook Photo", "type": "main", "index": 0}]]},
+    "Publish Facebook Photo": {"main": [[{"node": "Download TikTok Video", "type": "main", "index": 0}]]},
+    "Download TikTok Video": {"main": [[{"node": "TikTok Creator Info", "type": "main", "index": 0}, {"node": "Attach Video Binary", "type": "main", "index": 0}]]},
+    "TikTok Creator Info": {"main": [[{"node": "TikTok Init Upload", "type": "main", "index": 0}]]},
+    "TikTok Init Upload": {"main": [[{"node": "Attach Video Binary", "type": "main", "index": 1}]]},
+    "Attach Video Binary": {"main": [[{"node": "Upload Video to TikTok", "type": "main", "index": 0}]]},
+    "Upload Video to TikTok": {"main": [[{"node": "Save Publishing IDs", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1", "saveManualExecutions": true, "timezone": "Asia/Bangkok"},
+  "active": false,
+  "versionId": "06cc6d45-037b-4dba-8e64-a0c7b0b7da74",
+  "meta": {"templateCredsSetupCompleted": false},
+  "tags": []
+}

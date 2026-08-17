@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\Admin\TaxController as ApiAdminTaxController;
 use App\Http\Controllers\Api\Admin\OrderRequestController as ApiAdminOrderRequestController;
 use App\Http\Controllers\Api\Admin\TrashController as ApiAdminTrashController;
 use App\Http\Controllers\Api\Admin\UserController as ApiAdminUserController;
+use App\Http\Controllers\Api\Automation\SocialContentJobController as ApiSocialContentJobController;
 use App\Http\Controllers\Api\Public\CategoryController as ApiPublicCategoryController;
 use App\Http\Controllers\Api\Public\ChatController as ApiPublicChatController;
 use App\Http\Controllers\Api\Public\HomeController as ApiPublicHomeController;
@@ -38,6 +39,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
+
+    Route::prefix('automation')
+        ->middleware(['n8n', 'throttle:120,1'])
+        ->group(function () {
+            Route::get('/social-jobs', [ApiSocialContentJobController::class, 'index']);
+            Route::post('/social-jobs/intake', [ApiSocialContentJobController::class, 'intake']);
+            Route::get('/social-jobs/{socialContentJob}', [ApiSocialContentJobController::class, 'show']);
+            Route::patch('/social-jobs/{socialContentJob}', [ApiSocialContentJobController::class, 'update']);
+            Route::post('/social-jobs/{socialContentJob}/approval', [ApiSocialContentJobController::class, 'approve']);
+        });
 
     /*
     |--------------------------------------------------------------------------
